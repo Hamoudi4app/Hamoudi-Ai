@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Hamoudi AI - الشات</title>
+
+    <!-- أيقونة الموقع -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #020617;
+            font-family: 'Segoe UI', sans-serif;
+            color: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, #0ea5e9aa, transparent 60%),
+                        radial-gradient(circle at 80% 80%, #6366f1aa, transparent 60%);
+            filter: blur(80px);
+            z-index: -1;
+        }
+
+        .chat-container {
+            width: 100%;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.93);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        /* ---------------- Sidebar Profile ---------------- */
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #00000088;
+            backdrop-filter: blur(3px);
+            display: none;
+            z-index: 90;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 300px;
+            height: 100%;
+            background: #0f172a;
+            border-right: 2px solid #0ea5e9;
+            box-shadow: 0 0 30px #0ea5e955;
+            padding: 20px;
+            z-index: 100;
+            transition: 0.4s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header img {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            border: 3px solid #0ea5e9;
+            box-shadow: 0 0 20px #0ea5e9aa;
+        }
+
+        .sidebar-header h2 {
+            margin: 10px 0 5px;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .sidebar-header p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* النص الجديد */
+        .dev-footer {
+            margin-top: 80px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            opacity: 0;
+            animation: fadeInDev 1.4s ease forwards;
+        }
+
+        .dev-footer a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .dev-footer a:hover {
+            color: #0ea5e9;
+            text-shadow: 0 0 12px #0ea5e9;
+        }
+
+        @keyframes fadeInDev {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .sidebar-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-logout {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .btn-logout:hover {
+            box-shadow: 0 0 20px #ef4444;
+        }
+
+        /* ---------------- Chat Header ---------------- */
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #1e293b;
+            background: linear-gradient(to right, #02061755, #0b112055);
+        }
+
+        .chat-title span:first-child {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #f9fafb;
+        }
+
+        .chat-title span:last-child {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .profile-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #0ea5e9;
+            box-shadow: 0 0 10px #0ea5e9aa;
+            transition: 0.2s;
+        }
+
+        .profile-icon:hover {
+            box-shadow: 0 0 20px #0ea5e9;
+        }
+
+        /* ---------------- Messages ---------------- */
+
+        .chat-messages {
+            flex: 1;
+            padding: 12px 16px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            margin-left: auto;
+            background: #0ea5e9;
+            color: #0f172a;
+            border-bottom-right-radius: 0;
+        }
+
+        .ai-message {
+            margin-right: auto;
+            background: #111827;
+            color: #e5e7eb;
+            border-bottom-left-radius: 0;
+            border: 1px solid #1f2937;
+        }
+
+        /* ---------------- Input ---------------- */
+
+        .chat-input-area {
+            padding: 10px 12px;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            gap: 8px;
+            background: #020617dd;
+        }
+
+        .chat-input-area textarea {
+            flex: 1;
+            resize: none;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            background: #020617;
+            color: #e5e7eb;
+            padding: 8px 10px;
+            font-size: 0.95rem;
+            min-height: 40px;
+            max-height: 80px;
+            outline: none;
+        }
+
+        .send-btn {
+            padding: 0 16px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(90deg, #0ea5e9, #6366f1);
+            color: #f9fafb;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            box-shadow: 0 0 15px #0ea5e955;
+            transition: 0.2s;
+        }
+
+        .send-btn:hover {
+            box-shadow: 0 0 22px #0ea5e9;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<!-- Sidebar Overlay -->
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar Profile -->
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <img src="{{ profile_image }}" alt="Profile">
+        <h2>{{ username }}</h2>
+        <p>{{ email }}</p>
+    </div>
+
+    <!-- زر تسجيل الخروج فقط -->
+    <button class="sidebar-btn btn-logout" onclick="window.location.href='/logout'">تسجيل الخروج</button>
+
+    <!-- النص الجديد -->
+    <div class="dev-footer">
+        تم التطوير بواسطة 
+        <a href="https://my-profile-4w23.vercel.app/" target="_blank">محمد فيصل</a>
+    </div>
+</div>
+
+<!-- Chat Container -->
+<div class="chat-container">
+
+    <div class="chat-header">
+        <div class="chat-title">
+            <span>Hamoudi AI</span>
+            <span>مرحبًا {{ username }} 👋</span>
+        </div>
+
+        <img src="{{ profile_image }}" class="profile-icon" onclick="openSidebar()">
+    </div>
+
+    <div id="messages" class="chat-messages">
+        <div class="message ai-message">
+            مرحبًا بك في Hamoudi AI.<br>
+            اسألني ما تشاء، وسأجيبك بالعربية فقط.
+        </div>
+    </div>
+
+    <div class="chat-input-area">
+        <textarea id="user-input" placeholder="اكتب رسالتك هنا..."></textarea>
+        <button id="send-btn" class="send-btn" onclick="sendMessage()">إرسال</button>
+    </div>
+
+</div>
+
+<script>
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function openSidebar() {
+        sidebar.classList.add("open");
+        overlay.style.display = "block";
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove("open");
+        overlay.style.display = "none";
+    }
+
+    /* ---------------- Chat Logic ---------------- */
+
+    const messagesContainer = document.getElementById("messages");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    function addMessage(text, isUser = false) {
+        const div = document.createElement("div");
+        div.classList.add("message");
+        div.classList.add(isUser ? "user-message" : "ai-message");
+        div.innerText = text;
+        messagesContainer.appendChild(div);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        addMessage(text, true);
+        userInput.value = "";
+        userInput.focus();
+
+        const typing = document.createElement("div");
+        typing.classList.add("message", "ai-message");
+        typing.innerText = "Hamoudi AI يكتب...";
+        messagesContainer.appendChild(typing);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        sendBtn.disabled = true;
+
+        try {
+            const resp = await fetch("/api/chat", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message: text})
+            });
+
+            const data = await resp.json();
+            messagesContainer.removeChild(typing);
+
+            if (data.reply) {
+                addMessage(data.reply, false);
+            } else {
+                addMessage("خطأ: " + data.error, false);
+            }
+        } catch {
+            messagesContainer.removeChild(typing);
+            addMessage("تعذر الاتصال بالخادم.", false);
+        }
+
+        sendBtn.disabled = false;
+    }
+
+    userInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
+
+</body>
+</html>

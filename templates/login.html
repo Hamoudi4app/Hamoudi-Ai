@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تسجيل الدخول - Hamoudi AI</title>
+
+    <!-- أيقونة الموقع -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #020617;
+            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            width: 90%;
+            max-width: 380px;
+            padding: 25px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid #0ea5e955;
+            border-radius: 14px;
+            box-shadow: 0 0 40px #0ea5e933;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .logo {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            border: 3px solid #0ea5e9;
+            box-shadow: 0 0 20px #0ea5e9aa;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #fff;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-login {
+            background: linear-gradient(90deg, #0ea5e9, #6366f1);
+            color: #fff;
+        }
+
+        .btn-otp {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .error {
+            margin-top: 10px;
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <!-- نفس صورة الشات -->
+    <img src="{{ url_for('static', filename='favicon.png') }}" class="logo" alt="Logo">
+
+    <h2>تسجيل الدخول</h2>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <!-- تسجيل دخول بكلمة مرور -->
+    <form method="POST" action="/">
+        <input type="hidden" name="login_type" value="password">
+
+        <input type="email" name="email" placeholder="البريد الإلكتروني" required>
+        <input type="password" name="password" placeholder="كلمة المرور" required>
+
+        <button class="btn-login">تسجيل الدخول</button>
+    </form>
+
+    <hr style="margin: 20px 0; border-color: #334155;">
+
+    <!-- تسجيل دخول بالرمز -->
+    <form method="POST" action="/">
+        <input type="hidden" name="login_type" value="otp">
+
+        <input type="email" name="email_otp" placeholder="البريد الإلكتروني" required>
+
+        <button class="btn-otp">تسجيل الدخول بالرمز</button>
+    </form>
+
+</div>
+
+</body>
+</html>
