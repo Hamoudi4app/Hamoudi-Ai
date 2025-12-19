@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import smtplib
 import random
@@ -6,25 +7,35 @@ from email.mime.text import MIMEText
 from flask import Flask, render_template, request, redirect, session, jsonify, url_for
 import requests
 from datetime import timedelta
-
 from flask_dance.contrib.google import make_google_blueprint, google
 
 app = Flask(__name__)
-app.secret_key = "CHANGE_THIS_SECRET_KEY"
 
+# غيّر المفتاح في الإنتاج
+app.secret_key = os.environ.get("SECRET_KEY", "CHANGE_THIS_SECRET_KEY")
+
+# مدة الجلسة الدائمة
 app.permanent_session_lifetime = timedelta(days=7)
 
-# استخدم مسار مؤقت للـ SQLite حتى يعمل على Vercel
-DB_NAME = "/tmp/users.db"
+# السماح بـ OAuth محليًا عبر HTTP (فقط للتجارب المحلية)
+os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 
-GROQ_API_KEY = "YOUR_GROQ_API_KEY"
-SMTP_EMAIL = "hamoudi4app@gmail.com"
-SMTP_PASSWORD = "YOUR_SMTP_PASSWORD"
+# اختيار مسار قاعدة البيانات حسب البيئة
+if os.environ.get("VERCEL"):
+    DB_NAME = "/tmp/users.db"  # على Vercel
+else:
+    DB_NAME = os.environ.get("DB_NAME", "users.db")  # محليًا
 
-GOOGLE_CLIENT_ID = "709177062776-hu34l98t1pj2keum1j8ci0lemb1bh3im.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET = "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"
+# مفاتيح من البيئة (أفضل وأضمن)
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "hamoudi4app@gmail.com")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
-
+# ---------------------------------------------------
+# تهيئة قاعدة البيانات
+# ---------------------------------------------------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -39,13 +50,13 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 init_db()
 
-
+# ---------------------------------------------------
+# دوال مساعدة
+# ---------------------------------------------------
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
 
 def send_otp_email(to_email: str, otp_code: str):
     subject = "رمز التحقق - Hamoudi AI"
@@ -60,25 +71,35 @@ def send_otp_email(to_email: str, otp_code: str):
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
         server.send_message(msg)
 
-
+# ---------------------------------------------------
+# Google OAuth
+# ---------------------------------------------------
+# ملاحظة مهمة:
+# في Google Cloud Console لازم تضيف:
+# Authorized JavaScript origins: https://your-project.vercel.app
+# Authorized redirect URIs:     https://your-project.vercel.app/login/google/authorized
 google_bp = make_google_blueprint(
     client_id=GOOGLE_CLIENT_ID,
     client_secret=GOOGLE_CLIENT_SECRET,
     scope=["profile", "email"],
-    redirect_to="google_login"
+    redirect_to="google_login"  # بعد التوثيق هينادي الراوت /google
 )
 app.register_blueprint(google_bp, url_prefix="/login")
-
 
 @app.route("/google")
 def google_login():
     if not google.authorized:
         return redirect(url_for("google.login"))
+
     resp = google.get("/oauth2/v2/userinfo")
-    user_info = resp.json()
+    user_info = resp.json() if resp.ok else {}
 
     email = (user_info.get("email") or "").lower()
     username = user_info.get("name") or (email.split("@")[0] if email else "User")
+
+    if not email:
+        # فشل في الحصول على البريد (احتمال صلاحيات أو إعدادات)
+        return redirect(url_for("login", error="فشل في جلب بيانات حساب Google."))
 
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -102,9 +123,12 @@ def google_login():
 
     return redirect("/chat")
 
-
+# ---------------------------------------------------
+# تسجيل الدخول (كلمة مرور / OTP)
+# ---------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
+    error_msg = request.args.get("error")
     if request.method == "POST":
         login_type = request.form.get("login_type", "password")
 
@@ -170,15 +194,16 @@ def login():
     if session.get("user_id"):
         return redirect("/chat")
 
-    return render_template("login.html")
+    return render_template("login.html", error=error_msg)
 
-
+# ---------------------------------------------------
+# صفحة التحقق من OTP
+# ---------------------------------------------------
 @app.route("/verify")
 def verify():
     if "pending_email" not in session:
         return redirect("/")
     return render_template("verify.html", email=session.get("pending_email"))
-
 
 @app.route("/verify_otp", methods=["POST"])
 def verify_otp():
@@ -203,7 +228,9 @@ def verify_otp():
 
     return redirect("/chat")
 
-
+# ---------------------------------------------------
+# صفحة الشات
+# ---------------------------------------------------
 @app.route("/chat")
 def chat():
     if "user_id" not in session:
@@ -220,7 +247,9 @@ def chat():
         profile_image=profile_image
     )
 
-
+# ---------------------------------------------------
+# API الشات (Groq)
+# ---------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     if "user_id" not in session:
@@ -267,4 +296,18 @@ def api_chat():
 
     except Exception as e:
         print("Chat Error:", repr(e))
-        return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}),
+        return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
+
+# ---------------------------------------------------
+# تسجيل الخروج
+# ---------------------------------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+# ---------------------------------------------------
+# تشغيل السيرفر محليًا (لا تستخدمه على Vercel)
+# ---------------------------------------------------
+if __name__ == "__main__":
+    app.run(debug=True)
