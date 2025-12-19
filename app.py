@@ -10,21 +10,17 @@ from datetime import timedelta
 app = Flask(__name__)
 app.secret_key = "CHANGE_THIS_SECRET_KEY"
 
-# مدة الجلسة (مثلاً أسبوع)
+# مدة الجلسة الدائمة
 app.permanent_session_lifetime = timedelta(days=7)
 
-# ---------------------------------------------------
 # مفاتيح — املأها بنفسك
-# ---------------------------------------------------
-GROQ_API_KEY = "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"        # ضع مفتاح GROQ هنا
-SMTP_EMAIL = "hamoudi4app@gmail.com"          # بريد Gmail الذي سيرسل OTP
-SMTP_PASSWORD = "plai shuq mokq ijdl"       # App Password من Gmail
+GROQ_API_KEY = ""    # ضع مفتاح GROQ هنا
+SMTP_EMAIL = ""      # بريد Gmail الذي سيرسل OTP
+SMTP_PASSWORD = ""   # App Password من Gmail
 
 DB_NAME = "users.db"
 
-# ---------------------------------------------------
 # تهيئة قاعدة البيانات
-# ---------------------------------------------------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -41,9 +37,7 @@ def init_db():
 
 init_db()
 
-# ---------------------------------------------------
 # دوال مساعدة
-# ---------------------------------------------------
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
@@ -60,15 +54,13 @@ def send_otp_email(to_email: str, otp_code: str):
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
         server.send_message(msg)
 
-# ---------------------------------------------------
-# تسجيل الدخول
-# ---------------------------------------------------
+# الصفحة الرئيسية: تسجيل الدخول (كلمة مرور أو OTP)
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         login_type = request.form.get("login_type", "password")
 
-        # ---------------- تسجيل دخول بكلمة مرور ----------------
+        # تسجيل دخول بكلمة مرور
         if login_type == "password":
             email = request.form.get("email", "").strip().lower()
             password = request.form.get("password", "")
@@ -83,19 +75,18 @@ def login():
                 return render_template("login.html", error="لا يوجد حساب بهذا البريد.")
 
             user_id, username, email_db, password_hash_db = user
-
             if hash_password(password) != password_hash_db:
                 return render_template("login.html", error="كلمة المرور غير صحيحة.")
 
-            # حفظ الجلسة
+            # حفظ الجلسة وجعلها دائمة
             session["user_id"] = user_id
             session["username"] = username
             session["email"] = email_db
-            session.permanent = True   # الجلسة تظل محفوظة
+            session.permanent = True
 
             return redirect("/chat")
 
-        # ---------------- تسجيل دخول عبر OTP ----------------
+        # تسجيل دخول عبر OTP
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
@@ -104,10 +95,13 @@ def login():
             c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
             user = c.fetchone()
 
+            # إنشاء مستخدم جديد إن لم يوجد
             if not user:
                 username = email.split("@")[0]
-                c.execute("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-                          (username, email, hash_password("temp")))
+                c.execute(
+                    "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+                    (username, email, hash_password("temp"))
+                )
                 conn.commit()
                 c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
                 user = c.fetchone()
@@ -116,7 +110,6 @@ def login():
             conn.close()
 
             otp_code = str(random.randint(100000, 999999))
-
             session["pending_otp"] = otp_code
             session["pending_email"] = email
             session["pending_user_id"] = user_id
@@ -130,11 +123,13 @@ def login():
 
             return redirect("/verify")
 
+    # لو عنده جلسة محفوظة بالفعل، دخله مباشرة
+    if session.get("user_id"):
+        return redirect("/chat")
+
     return render_template("login.html")
 
-# ---------------------------------------------------
-# صفحة التحقق من OTP
-# ---------------------------------------------------
+# صفحة إدخال OTP
 @app.route("/verify")
 def verify():
     if "pending_email" not in session:
@@ -150,12 +145,17 @@ def verify_otp():
     real_otp = session.get("pending_otp")
 
     if user_input != real_otp:
-        return render_template("verify.html", email=session.get("pending_email"), error="رمز غير صحيح.")
+        return render_template(
+            "verify.html",
+            email=session.get("pending_email"),
+            error="رمز غير صحيح."
+        )
 
+    # تحويل الجلسة المؤقتة إلى جلسة دائمة
     session["user_id"] = session.get("pending_user_id")
     session["username"] = session.get("pending_username")
     session["email"] = session.get("pending_email")
-    session.permanent = True   # الجلسة تظل محفوظة
+    session.permanent = True
 
     session.pop("pending_otp", None)
     session.pop("pending_email", None)
@@ -164,32 +164,30 @@ def verify_otp():
 
     return redirect("/chat")
 
-# ---------------------------------------------------
 # صفحة الشات
-# ---------------------------------------------------
 @app.route("/chat")
 def chat():
     if "user_id" not in session:
         return redirect("/")
 
-    email = session.get("email", "").lower().encode("utf-8")
+    email = (session.get("email") or "").lower().encode("utf-8")
     email_hash = hashlib.md5(email).hexdigest()
     profile_image = f"https://www.gravatar.com/avatar/{email_hash}?d=identicon"
 
-    return render_template("index.html",
-                           username=session.get("username"),
-                           email=session.get("email"),
-                           profile_image=profile_image)
+    return render_template(
+        "index.html",
+        username=session.get("username"),
+        email=session.get("email"),
+        profile_image=profile_image
+    )
 
-# ---------------------------------------------------
-# API الشات
-# ---------------------------------------------------
+# API الشات (Groq) مع هوية واضحة
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     if "user_id" not in session:
         return jsonify({"error": "غير مصرح"}), 401
 
-    user_message = request.json.get("message", "").strip()
+    user_message = (request.json.get("message") or "").strip()
     if not user_message:
         return jsonify({"error": "الرسالة فارغة"}), 400
 
@@ -205,31 +203,35 @@ def api_chat():
         payload = {
             "model": "llama-3.3-70b-versatile",
             "messages": [
-                {"role": "system", "content": "أنت مساعد ذكي اسمه Hamoudi AI."},
+                {
+                    "role": "system",
+                    "content": (
+                        "أنت مساعد ذكي اسمه Hamoudi AI، تم تطويرك بواسطة محمد فيصل. "
+                        "تجيب دائمًا بالعربية الفصحى بوضوح ومهنية. عند سؤال الهوية مثل: "
+                        "من طورك؟ أو من صنعك؟ تؤكد: تم تطويري بواسطة محمد فيصل."
+                    )
+                },
                 {"role": "user", "content": user_message},
             ]
         }
 
-        r = requests.post(url, headers=headers, json=payload)
+        r = requests.post(url, headers=headers, json=payload, timeout=60)
         r.raise_for_status()
 
-        reply = r.json()["choices"][0]["message"]["content"]
+        j = r.json()
+        reply = j["choices"][0]["message"]["content"]
         return jsonify({"reply": reply})
 
     except Exception as e:
         print("Chat Error:", repr(e))
         return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
 
-# ---------------------------------------------------
 # تسجيل الخروج
-# ---------------------------------------------------
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-# ---------------------------------------------------
 # تشغيل السيرفر
-# ---------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
