@@ -1,37 +1,26 @@
-import os
 import sqlite3
 import smtplib
 import random
 import hashlib
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, redirect, session, jsonify, url_for
+from flask import Flask, render_template, request, redirect, session, jsonify
 import requests
 from datetime import timedelta
-from flask_dance.contrib.google import make_google_blueprint, google
 
 app = Flask(__name__)
-
-# غيّر المفتاح في الإنتاج
-app.secret_key = os.environ.get("SECRET_KEY", "CHANGE_THIS_SECRET_KEY")
+app.secret_key = "CHANGE_THIS_SECRET_KEY"
 
 # مدة الجلسة الدائمة
 app.permanent_session_lifetime = timedelta(days=7)
 
-# السماح بـ OAuth محليًا عبر HTTP (فقط للتجارب المحلية)
-os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+# ---------------------------------------------------
+# مفاتيح — املأها بنفسك
+# ---------------------------------------------------
+GROQ_API_KEY = "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"
+SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
+SMTP_PASSWORD = "plai shuq mokq ijdl"
 
-# اختيار مسار قاعدة البيانات حسب البيئة
-if os.environ.get("VERCEL"):
-    DB_NAME = "/tmp/users.db"  # على Vercel
-else:
-    DB_NAME = os.environ.get("DB_NAME", "users.db")  # محليًا
-
-# مفاتيح من البيئة (أفضل وأضمن)
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "hamoudi4app@gmail.com")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+DB_NAME = "users.db"
 
 # ---------------------------------------------------
 # تهيئة قاعدة البيانات
@@ -72,66 +61,14 @@ def send_otp_email(to_email: str, otp_code: str):
         server.send_message(msg)
 
 # ---------------------------------------------------
-# Google OAuth
-# ---------------------------------------------------
-# ملاحظة مهمة:
-# في Google Cloud Console لازم تضيف:
-# Authorized JavaScript origins: https://your-project.vercel.app
-# Authorized redirect URIs:     https://your-project.vercel.app/login/google/authorized
-google_bp = make_google_blueprint(
-    client_id=GOOGLE_CLIENT_ID,
-    client_secret=GOOGLE_CLIENT_SECRET,
-    scope=["profile", "email"],
-    redirect_to="google_login"  # بعد التوثيق هينادي الراوت /google
-)
-app.register_blueprint(google_bp, url_prefix="/login")
-
-@app.route("/google")
-def google_login():
-    if not google.authorized:
-        return redirect(url_for("google.login"))
-
-    resp = google.get("/oauth2/v2/userinfo")
-    user_info = resp.json() if resp.ok else {}
-
-    email = (user_info.get("email") or "").lower()
-    username = user_info.get("name") or (email.split("@")[0] if email else "User")
-
-    if not email:
-        # فشل في الحصول على البريد (احتمال صلاحيات أو إعدادات)
-        return redirect(url_for("login", error="فشل في جلب بيانات حساب Google."))
-
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
-    user = c.fetchone()
-    if not user:
-        c.execute(
-            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-            (username, email, hash_password("google"))
-        )
-        conn.commit()
-        c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
-        user = c.fetchone()
-    user_id, username = user
-    conn.close()
-
-    session["user_id"] = user_id
-    session["username"] = username
-    session["email"] = email
-    session.permanent = True
-
-    return redirect("/chat")
-
-# ---------------------------------------------------
-# تسجيل الدخول (كلمة مرور / OTP)
+# تسجيل الدخول
 # ---------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
-    error_msg = request.args.get("error")
     if request.method == "POST":
         login_type = request.form.get("login_type", "password")
 
+        # تسجيل دخول بكلمة مرور
         if login_type == "password":
             email = request.form.get("email", "").strip().lower()
             password = request.form.get("password", "")
@@ -156,6 +93,7 @@ def login():
 
             return redirect("/chat")
 
+        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
@@ -165,7 +103,7 @@ def login():
             user = c.fetchone()
 
             if not user:
-                username = email.split("@")[0] if "@" in email else "User"
+                username = email.split("@")[0]
                 c.execute(
                     "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
                     (username, email, hash_password("temp"))
@@ -194,7 +132,7 @@ def login():
     if session.get("user_id"):
         return redirect("/chat")
 
-    return render_template("login.html", error=error_msg)
+    return render_template("login.html")
 
 # ---------------------------------------------------
 # صفحة التحقق من OTP
@@ -290,6 +228,7 @@ def api_chat():
 
         r = requests.post(url, headers=headers, json=payload, timeout=60)
         r.raise_for_status()
+
         j = r.json()
         reply = j["choices"][0]["message"]["content"]
         return jsonify({"reply": reply})
@@ -307,7 +246,8 @@ def logout():
     return redirect("/")
 
 # ---------------------------------------------------
-# تشغيل السيرفر محليًا (لا تستخدمه على Vercel)
+# تشغيل السيرفر
 # ---------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+    
