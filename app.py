@@ -16,9 +16,9 @@ app.permanent_session_lifetime = timedelta(days=7)
 # ---------------------------------------------------
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "ضع مفتاحك هنا"
 SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
-SMTP_PASSWORD = "plai shuq mokq ijdl"
+SMTP_PASSWORD = "ضع كلمة مرور التطبيق هنا"
 
 DB_NAME = "users.db"
 
@@ -93,7 +93,7 @@ def login():
 
             return redirect("/chat")
 
-        # تسجيل دخول عبر OTP
+        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
