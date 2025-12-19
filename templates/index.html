@@ -21,11 +21,11 @@
 
     /* Sidebar */
     .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; z-index:9; }
-    .sidebar { position:fixed; top:0; left:-300px; width:300px; height:100%; background:#111827; z-index:10; padding:20px; display:flex; flex-direction:column; align-items:center; transition:left 0.3s ease; }
-    .sidebar.open { left:0; }
+    .sidebar { position:fixed; top:0; left:0; width:300px; height:100%; background:#111827; z-index:10; padding:20px; display:flex; flex-direction:column; align-items:center; transform:translateX(-100%); transition:transform 0.3s ease; }
+    .sidebar.open { transform:translateX(0); }
     .sidebar img { width:80px; height:80px; border-radius:50%; border:2px solid #0ea5e9; margin-bottom:15px; }
     .user-email { color:#e5e7eb; margin-bottom:20px; font-size:0.95rem; word-break:break-word; }
-    .logout-btn { background:#ef4444; color:#fff; border:none; padding:14px 28px; border-radius:10px; cursor:pointer; font-weight:bold; font-size:1rem; transition:0.2s; }
+    .logout-btn { background:#ef4444; color:#fff; border:none; padding:16px 32px; border-radius:10px; cursor:pointer; font-weight:bold; font-size:1.1rem; transition:0.2s; }
     .logout-btn:hover { transform:scale(1.05); box-shadow:0 0 12px #ef4444aa; }
     .dev-info { margin-top:auto; font-size:0.9rem; color:#94a3b8; text-align:center; }
     .dev-info a { color:#0ea5e9; font-weight:bold; text-decoration:none; }
@@ -47,8 +47,7 @@
 
     <div id="messages" class="chat-messages">
       <div class="message ai-message">
-        مرحبًا بك في Hamoudi AI.<br>
-        مثال: تقدر تتواصل مع المطور <a href="https://my-profile-4w23.vercel.app/" target="_blank">محمد فيصل</a>
+        مرحبًا {{ username }}، كيف يمكنني مساعدتك اليوم؟
       </div>
     </div>
 
