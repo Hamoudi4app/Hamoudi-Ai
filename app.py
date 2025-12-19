@@ -13,14 +13,18 @@ app.secret_key = "CHANGE_THIS_SECRET_KEY"
 # مدة الجلسة الدائمة
 app.permanent_session_lifetime = timedelta(days=7)
 
+# ---------------------------------------------------
 # مفاتيح — املأها بنفسك
+# ---------------------------------------------------
 GROQ_API_KEY = "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"    # ضع مفتاح GROQ هنا
 SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
 SMTP_PASSWORD = "plai shuq mokq ijdl"   # App Password من Gmail
 
 DB_NAME = "users.db"
 
+# ---------------------------------------------------
 # تهيئة قاعدة البيانات
+# ---------------------------------------------------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -37,7 +41,9 @@ def init_db():
 
 init_db()
 
+# ---------------------------------------------------
 # دوال مساعدة
+# ---------------------------------------------------
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
@@ -54,7 +60,9 @@ def send_otp_email(to_email: str, otp_code: str):
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
         server.send_message(msg)
 
-# الصفحة الرئيسية: تسجيل الدخول (كلمة مرور أو OTP)
+# ---------------------------------------------------
+# تسجيل الدخول
+# ---------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -78,7 +86,6 @@ def login():
             if hash_password(password) != password_hash_db:
                 return render_template("login.html", error="كلمة المرور غير صحيحة.")
 
-            # حفظ الجلسة وجعلها دائمة
             session["user_id"] = user_id
             session["username"] = username
             session["email"] = email_db
@@ -95,7 +102,6 @@ def login():
             c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
             user = c.fetchone()
 
-            # إنشاء مستخدم جديد إن لم يوجد
             if not user:
                 username = email.split("@")[0]
                 c.execute(
@@ -123,13 +129,14 @@ def login():
 
             return redirect("/verify")
 
-    # لو عنده جلسة محفوظة بالفعل، دخله مباشرة
     if session.get("user_id"):
         return redirect("/chat")
 
     return render_template("login.html")
 
-# صفحة إدخال OTP
+# ---------------------------------------------------
+# صفحة التحقق من OTP
+# ---------------------------------------------------
 @app.route("/verify")
 def verify():
     if "pending_email" not in session:
@@ -145,13 +152,8 @@ def verify_otp():
     real_otp = session.get("pending_otp")
 
     if user_input != real_otp:
-        return render_template(
-            "verify.html",
-            email=session.get("pending_email"),
-            error="رمز غير صحيح."
-        )
+        return render_template("verify.html", email=session.get("pending_email"), error="رمز غير صحيح.")
 
-    # تحويل الجلسة المؤقتة إلى جلسة دائمة
     session["user_id"] = session.get("pending_user_id")
     session["username"] = session.get("pending_username")
     session["email"] = session.get("pending_email")
@@ -164,7 +166,9 @@ def verify_otp():
 
     return redirect("/chat")
 
+# ---------------------------------------------------
 # صفحة الشات
+# ---------------------------------------------------
 @app.route("/chat")
 def chat():
     if "user_id" not in session:
@@ -181,7 +185,9 @@ def chat():
         profile_image=profile_image
     )
 
-# API الشات (Groq) مع هوية واضحة
+# ---------------------------------------------------
+# API الشات (Groq) مع هوية وتواصل
+# ---------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     if "user_id" not in session:
@@ -207,8 +213,10 @@ def api_chat():
                     "role": "system",
                     "content": (
                         "أنت مساعد ذكي اسمه Hamoudi AI، تم تطويرك بواسطة محمد فيصل. "
-                        "تجيب دائمًا بالعربية الفصحى بوضوح ومهنية. عند سؤال الهوية مثل: "
-                        "من طورك؟ أو من صنعك؟ تؤكد: تم تطويري بواسطة محمد فيصل."
+                        "تجيب دائمًا بالعربية الفصحى بوضوح ومهنية. "
+                        "عند سؤال الهوية مثل: من طورك؟ أو من صنعك؟ تؤكد: تم تطويري بواسطة محمد فيصل. "
+                        "وعند سؤال طريقة التواصل مع المطور، تجاوب: "
+                        "تقدر تتواصل مع المطور محمد فيصل عبر الرابط التالي: https://my-profile-4w23.vercel.app/"
                     )
                 },
                 {"role": "user", "content": user_message},
@@ -226,12 +234,16 @@ def api_chat():
         print("Chat Error:", repr(e))
         return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
 
+# ---------------------------------------------------
 # تسجيل الخروج
+# ---------------------------------------------------
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
+# ---------------------------------------------------
 # تشغيل السيرفر
+# ---------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
