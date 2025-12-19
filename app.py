@@ -6,7 +6,6 @@ from email.mime.text import MIMEText
 from flask import Flask, render_template, request, redirect, session, jsonify
 import requests
 from datetime import timedelta
-import logging
 
 app = Flask(__name__)
 app.secret_key = "CHANGE_THIS_SECRET_KEY"
@@ -18,15 +17,10 @@ app.permanent_session_lifetime = timedelta(days=7)
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
 GROQ_API_KEY = "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"
-SMTP_EMAIL = "hamoudi4app@gmail.com"
+SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
 SMTP_PASSWORD = "plai shuq mokq ijdl"
 
 DB_NAME = "users.db"
-
-# ---------------------------------------------------
-# إعداد الـ logging لمتابعة الأخطاء
-# ---------------------------------------------------
-logging.basicConfig(level=logging.INFO)
 
 # ---------------------------------------------------
 # تهيئة قاعدة البيانات
@@ -71,100 +65,74 @@ def send_otp_email(to_email: str, otp_code: str):
 # ---------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
-    try:
-        if request.method == "POST":
-            login_type = request.form.get("login_type", "password")
+    if request.method == "POST":
+        login_type = request.form.get("login_type", "password")
 
-            # تسجيل دخول بكلمة مرور
-            if login_type == "password":
-                email = request.form.get("email", "").strip().lower()
-                password = request.form.get("password", "")
+        # تسجيل دخول بكلمة مرور
+        if login_type == "password":
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
 
-                # شرط لو عايز تقصر الدخول على بريدك فقط
-                if email != "fysl20515@gmail.com":
-                    return render_template("login.html", error="هذا البريد غير مسموح.")
+            conn = sqlite3.connect(DB_NAME)
+            c = conn.cursor()
+            c.execute("SELECT id, username, email, password_hash FROM users WHERE email = ?", (email,))
+            user = c.fetchone()
+            conn.close()
 
-                try:
-                    conn = sqlite3.connect(DB_NAME)
-                    c = conn.cursor()
-                    c.execute("SELECT id, username, email, password_hash FROM users WHERE email = ?", (email,))
-                    user = c.fetchone()
-                    conn.close()
-                except Exception as e:
-                    logging.error("DB Error: %s", repr(e))
-                    return render_template("login.html", error="خطأ في قاعدة البيانات.")
+            if not user:
+                return render_template("login.html", error="لا يوجد حساب بهذا البريد.")
 
-                if not user:
-                    return render_template("login.html", error="لا يوجد حساب بهذا البريد.")
+            user_id, username, email_db, password_hash_db = user
+            if hash_password(password) != password_hash_db:
+                return render_template("login.html", error="كلمة المرور غير صحيحة.")
 
-                user_id, username, email_db, password_hash_db = user
-                if hash_password(password) != password_hash_db:
-                    return render_template("login.html", error="كلمة المرور غير صحيحة.")
+            session["user_id"] = user_id
+            session["username"] = username
+            session["email"] = email_db
+            session.permanent = True
 
-                session["user_id"] = user_id
-                session["username"] = username
-                session["email"] = email_db
-                session.permanent = True
-
-                return redirect("/chat")
-
-            # تسجيل دخول عبر OTP
-            elif login_type == "otp":
-                email = request.form.get("email_otp", "").strip().lower()
-
-                # شرط لو عايز تقصر الدخول على بريدك فقط
-                if email != "fysl20515@gmail.com":
-                    return render_template("login.html", error="هذا البريد غير مسموح.")
-
-                try:
-                    conn = sqlite3.connect(DB_NAME)
-                    c = conn.cursor()
-                    c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
-                    user = c.fetchone()
-
-                    if not user:
-                        username = email.split("@")[0]
-                        try:
-                            c.execute(
-                                "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-                                (username, email, hash_password("temp"))
-                            )
-                            conn.commit()
-                        except Exception as e:
-                            logging.error("Insert Error: %s", repr(e))
-                            return render_template("login.html", error="تعذر إنشاء حساب جديد.")
-
-                        c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
-                        user = c.fetchone()
-
-                    user_id, username = user
-                    conn.close()
-                except Exception as e:
-                    logging.error("DB Error: %s", repr(e))
-                    return render_template("login.html", error="خطأ في قاعدة البيانات.")
-
-                otp_code = str(random.randint(100000, 999999))
-                session["pending_otp"] = otp_code
-                session["pending_email"] = email
-                session["pending_user_id"] = user_id
-                session["pending_username"] = username
-
-                try:
-                    send_otp_email(email, otp_code)
-                except Exception as e:
-                    logging.error("OTP Error: %s", repr(e))
-                    return render_template("login.html", error="تعذر إرسال رمز التحقق.")
-
-                return redirect("/verify")
-
-        if session.get("user_id"):
             return redirect("/chat")
 
-        return render_template("login.html")
+        # تسجيل دخول عبر OTP
+        elif login_type == "otp":
+            email = request.form.get("email_otp", "").strip().lower()
 
-    except Exception as e:
-        logging.error("Login Error: %s", repr(e))
-        return render_template("login.html", error="حدث خطأ غير متوقع أثناء تسجيل الدخول.")
+            conn = sqlite3.connect(DB_NAME)
+            c = conn.cursor()
+            c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
+            user = c.fetchone()
+
+            if not user:
+                username = email.split("@")[0]
+                c.execute(
+                    "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+                    (username, email, hash_password("temp"))
+                )
+                conn.commit()
+                c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
+                user = c.fetchone()
+
+            user_id, username = user
+            conn.close()
+
+            otp_code = str(random.randint(100000, 999999))
+            session["pending_otp"] = otp_code
+            session["pending_email"] = email
+            session["pending_user_id"] = user_id
+            session["pending_username"] = username
+
+            try:
+                send_otp_email(email, otp_code)
+            except Exception as e:
+                print("OTP Error:", repr(e))
+                return render_template("login.html", error="تعذر إرسال رمز التحقق.")
+
+            return redirect("/verify")
+
+    if session.get("user_id"):
+        return redirect("/chat")
+
+    return render_template("login.html")
 
 # ---------------------------------------------------
 # صفحة التحقق من OTP
@@ -218,7 +186,7 @@ def chat():
     )
 
 # ---------------------------------------------------
-# API الشات (Groq)
+# API الشات (Groq) مع هوية وتواصل وجنسية وعمر وسكن
 # ---------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
@@ -258,4 +226,27 @@ def api_chat():
             ]
         }
 
-        r = requests.post(url, headers=headers
+        r = requests.post(url, headers=headers, json=payload, timeout=60)
+        r.raise_for_status()
+
+        j = r.json()
+        reply = j["choices"][0]["message"]["content"]
+        return jsonify({"reply": reply})
+
+    except Exception as e:
+        print("Chat Error:", repr(e))
+        return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
+
+# ---------------------------------------------------
+# تسجيل الخروج
+# ---------------------------------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+# ---------------------------------------------------
+# تشغيل السيرفر
+# ---------------------------------------------------
+if __name__ == "__main__":
+    app.run(debug=True)
