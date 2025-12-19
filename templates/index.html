@@ -1,201 +1,143 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>Hamoudi AI - الشات</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hamoudi AI - الشات</title>
+  <style>
+    body { margin:0; background:#0f172a; color:#e5e7eb; font-family:"Segoe UI",sans-serif; }
+    .chat-container { width:100%; height:100vh; display:flex; flex-direction:column; }
+    .chat-header { display:flex; align-items:center; justify-content:space-between; padding:12px; background:#1e293b; }
+    .chat-title { font-weight:bold; font-size:1.1rem; }
+    .profile-icon { width:42px; height:42px; border-radius:50%; cursor:pointer; border:2px solid #0ea5e9; }
+    .chat-messages { flex:1; padding:12px; overflow-y:auto; background:#0f172a; }
+    .message { max-width:80%; margin-bottom:10px; padding:10px; border-radius:10px; line-height:1.5; }
+    .user-message { margin-left:auto; background:#0ea5e9; color:#0f172a; }
+    .ai-message { margin-right:auto; background:#1e293b; color:#e5e7eb; }
+    .chat-input-area { display:flex; padding:10px; background:#1e293b; }
+    textarea { flex:1; resize:none; border-radius:8px; border:none; padding:10px; background:#0f172a; color:#e5e7eb; }
+    .send-btn { margin-right:8px; padding:0 16px; border:none; border-radius:8px; background:#0ea5e9; color:#0f172a; font-weight:bold; cursor:pointer; }
+    .message a { color:#38bdf8; text-decoration:underline; }
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #020617;
-            font-family: 'Segoe UI', sans-serif;
-            color: #e5e7eb;
-            /* overflow: hidden; ← تم إزالته */
-        }
+    /* Sidebar */
+    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; z-index:9; }
+    .sidebar { position:fixed; top:0; right:-300px; width:300px; height:100%; background:#111827; z-index:10; padding:20px; display:flex; flex-direction:column; align-items:center; transition:right 0.3s ease; }
+    .sidebar.open { right:0; }
+    .sidebar img { width:80px; height:80px; border-radius:50%; border:2px solid #0ea5e9; margin-bottom:20px; }
+    .logout-btn { background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.2s; }
+    .logout-btn:hover { transform:scale(1.05); box-shadow:0 0 12px #ef4444aa; }
+    .dev-info { margin-top:auto; font-size:0.9rem; color:#94a3b8; text-align:center; }
+    .dev-info a { color:#0ea5e9; font-weight:bold; text-decoration:none; }
+    .dev-info a:hover { text-shadow:0 0 8px #0ea5e9; }
 
-        .bg {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 20%, #0ea5e9aa, transparent 60%),
-                        radial-gradient(circle at 80% 80%, #6366f1aa, transparent 60%);
-            filter: blur(80px);
-            z-index: -1;
-        }
-
-        .chat-container {
-            width: 100%;
-            height: 100vh;
-            background: rgba(15, 23, 42, 0.93);
-            display: flex;
-            flex-direction: column;
-            /* overflow: hidden; ← تم إزالته */
-            backdrop-filter: blur(12px);
-        }
-
-        /* ---------------- Sidebar Profile ---------------- */
-        .sidebar-overlay { /* ... نفس الكود السابق ... */ }
-        .sidebar { /* ... نفس الكود السابق ... */ }
-        .sidebar.open { left: 0; }
-        .sidebar-header { text-align: center; margin-bottom: 20px; }
-        .sidebar-header img { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #0ea5e9; box-shadow: 0 0 20px #0ea5e9aa; }
-        .sidebar-header h2 { margin: 10px 0 5px; font-size: 1.2rem; color: #fff; }
-        .sidebar-header p { margin: 0; font-size: 0.9rem; color: #94a3b8; }
-        .dev-footer { /* ... نفس الكود السابق ... */ }
-        @keyframes fadeInDev { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
-        .sidebar-btn { /* ... نفس الكود السابق ... */ }
-        .btn-logout { background: linear-gradient(90deg, #ef4444, #dc2626); color: #fff; }
-        .btn-logout:hover { box-shadow: 0 0 20px #ef4444; }
-
-        /* ---------------- Chat Header ---------------- */
-        .chat-header { /* ... نفس الكود السابق ... */ }
-        .chat-title span:first-child { font-size: 1.1rem; font-weight: bold; color: #f9fafb; }
-        .chat-title span:last-child { font-size: 0.8rem; color: #9ca3af; }
-        .profile-icon { /* ... نفس الكود السابق ... */ }
-
-        /* ---------------- Messages ---------------- */
-        .chat-messages {
-            flex: 1;
-            padding: 12px 16px;
-            overflow-y: auto;
-            scroll-behavior: smooth;
-        }
-        .message { /* ... نفس الكود السابق ... */ }
-        .user-message { /* ... نفس الكود السابق ... */ }
-        .ai-message { /* ... نفس الكود السابق ... */ }
-
-        /* ---------------- Input ---------------- */
-        .chat-input-area {
-            padding: 10px 12px;
-            border-top: 1px solid #1e293b;
-            display: flex;
-            gap: 8px;
-            background: #020617dd;
-            position: sticky;
-            bottom: 0; /* تثبيت تحت الشاشة */
-        }
-
-        .chat-input-area textarea { /* ... نفس الكود السابق ... */ }
-        .send-btn { /* ... نفس الكود السابق ... */ }
-        .send-btn:hover { box-shadow: 0 0 22px #0ea5e9; }
-    </style>
+    /* Responsive */
+    @media (max-width:600px){
+      .message{max-width:95%;}
+      .sidebar{width:80%;}
+    }
+  </style>
 </head>
 <body>
-
-<div class="bg"></div>
-
-<!-- Sidebar Overlay -->
-<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
-
-<!-- Sidebar Profile -->
-<div id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-        <img src="{{ profile_image }}" alt="Profile">
-        <h2>{{ username }}</h2>
-        <p>{{ email }}</p>
-    </div>
-    <button class="sidebar-btn btn-logout" onclick="window.location.href='/logout'">تسجيل الخروج</button>
-    <div class="dev-footer">
-        تم التطوير بواسطة 
-        <a href="https://my-profile-4w23.vercel.app/" target="_blank">محمد فيصل</a>
-    </div>
-</div>
-
-<!-- Chat Container -->
-<div class="chat-container">
+  <div class="chat-container">
     <div class="chat-header">
-        <div class="chat-title">
-            <span>Hamoudi AI</span>
-            <span>مرحبًا {{ username }} 👋</span>
-        </div>
-        <img src="{{ profile_image }}" class="profile-icon" onclick="openSidebar()">
+      <div class="chat-title">Hamoudi AI</div>
+      <img src="{{ profile_image }}" class="profile-icon" id="profileBtn" />
     </div>
 
     <div id="messages" class="chat-messages">
-        <div class="message ai-message">
-            مرحبًا بك في Hamoudi AI.<br>
-            اسألني ما تشاء، وسأجيبك بالعربية فقط.
-        </div>
+      <div class="message ai-message">
+        مرحبًا بك في Hamoudi AI.<br>
+        مثال: تقدر تتواصل مع المطور <a href="https://my-profile-4w23.vercel.app/" target="_blank">محمد فيصل</a>
+      </div>
     </div>
 
     <div class="chat-input-area">
-        <textarea id="user-input" placeholder="اكتب رسالتك هنا..."></textarea>
-        <button id="send-btn" class="send-btn" onclick="sendMessage()">إرسال</button>
+      <textarea id="user-input" placeholder="اكتب رسالتك هنا..."></textarea>
+      <button id="send-btn" class="send-btn">إرسال</button>
     </div>
-</div>
+  </div>
 
-<script>
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
+  <!-- Sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar">
+    <img src="{{ profile_image }}" alt="Profile" />
+    <button class="logout-btn" onclick="window.location.href='/logout'">تسجيل الخروج</button>
+    <div class="dev-info">
+      تم التطوير بواسطة — <a href="https://my-profile-4w23.vercel.app/" target="_blank">محمد فيصل</a>
+    </div>
+  </div>
 
-    function openSidebar() {
-        sidebar.classList.add("open");
-        overlay.style.display = "block";
-    }
-    function closeSidebar() {
-        sidebar.classList.remove("open");
-        overlay.style.display = "none";
-    }
-
+  <script>
     const messagesContainer = document.getElementById("messages");
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
+    const profileBtn = document.getElementById("profileBtn");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+    // linkify
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+      return text.replace(urlRegex, function(url) {
+        let href = url;
+        if (!href.startsWith("http")) href = "http://" + href;
+        return `<a href="${href}" target="_blank" rel="noopener">${url}</a>`;
+      });
+    }
 
     function addMessage(text, isUser = false) {
-        const div = document.createElement("div");
-        div.classList.add("message", isUser ? "user-message" : "ai-message");
-        div.innerText = text;
-        messagesContainer.appendChild(div);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      const div = document.createElement("div");
+      div.classList.add("message", isUser ? "user-message" : "ai-message");
+      div.innerHTML = linkify(text);
+      messagesContainer.appendChild(div);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
-
-        addMessage(text, true);
-        userInput.value = "";
-        userInput.focus();
-
-        const typing = document.createElement("div");
-        typing.classList.add("message", "ai-message");
-        typing.innerText = "Hamoudi AI يكتب...";
-        messagesContainer.appendChild(typing);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-        sendBtn.disabled = true;
-
-        try {
-            const resp = await fetch("/api/chat", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({message: text})
-            });
-            const data = await resp.json();
-            messagesContainer.removeChild(typing);
-
-            if (data.reply) {
-                addMessage(data.reply, false);
-            } else {
-                addMessage("خطأ: " + data.error, false);
-            }
-        } catch {
-            messagesContainer.removeChild(typing);
-            addMessage("تعذر الاتصال بالخادم.", false);
-        }
+      const text = userInput.value.trim();
+      if (!text) return;
+      addMessage(text, true);
+      userInput.value = "";
+      const typing = document.createElement("div");
+      typing.classList.add("message", "ai-message");
+      typing.textContent = "Hamoudi AI يكتب...";
+      messagesContainer.appendChild(typing);
+      sendBtn.disabled = true;
+      try {
+        const resp = await fetch("/api/chat", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({message: text})
+        });
+        const data = await resp.json();
+        typing.remove();
+        if (data.reply) addMessage(data.reply, false);
+        else addMessage("خطأ: " + (data.error || "تعذر جلب رد"), false);
+      } catch {
+        typing.remove();
+        addMessage("تعذر الاتصال بالخادم.", false);
+      } finally {
         sendBtn.disabled = false;
+      }
     }
 
-    userInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
     });
-</script>
 
+    // Sidebar toggle
+    profileBtn.addEventListener("click", () => {
+      sidebar.classList.add("open");
+      sidebarOverlay.style.display = "block";
+    });
+    sidebarOverlay.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      sidebarOverlay.style.display = "none";
+    });
+  </script>
 </body>
 </html>
