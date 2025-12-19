@@ -18,7 +18,7 @@ app.permanent_session_lifetime = timedelta(days=7)
 # ---------------------------------------------------
 GROQ_API_KEY = "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"
 SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
-SMTP_PASSWORD = "plai shuq mokq ijdl"
+SMTP_PASSWORD =   "plai shuq mokq ijdl"  # لازم تكون App Password من Gmail
 
 DB_NAME = "users.db"
 
@@ -56,9 +56,13 @@ def send_otp_email(to_email: str, otp_code: str):
     msg["From"] = SMTP_EMAIL
     msg["To"] = to_email
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(SMTP_EMAIL, SMTP_PASSWORD)
-        server.send_message(msg)
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.send_message(msg)
+    except Exception as e:
+        print("SMTP Error:", repr(e))
+        raise
 
 # ---------------------------------------------------
 # تسجيل الدخول
@@ -124,8 +128,7 @@ def login():
             try:
                 send_otp_email(email, otp_code)
             except Exception as e:
-                print("OTP Error:", repr(e))
-                return render_template("login.html", error="تعذر إرسال رمز التحقق.")
+                return render_template("login.html", error="تعذر إرسال رمز التحقق. تأكد من إعدادات Gmail أو صحة البريد.")
 
             return redirect("/verify")
 
