@@ -7,28 +7,24 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 import requests
 from datetime import timedelta
 
-app = Flask(name)
-app.secretkey = "CHANGETHISSECRETKEY"
+app = Flask(__name__)
+app.secret_key = "CHANGE_THIS_SECRET_KEY"
 
-مدة الجلسة الدائمة
-app.permanentsessionlifetime = timedelta(days=7)
+# مدة الجلسة الدائمة
+app.permanent_session_lifetime = timedelta(days=7)
 
----------------------------------------------------
-
-مفاتيح — املأها بنفسك
-
----------------------------------------------------
-GROQAPIKEY = "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"
+# ---------------------------------------------------
+# مفاتيح — املأها بنفسك
+# ---------------------------------------------------
+GROQ_API_KEY = "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"
 SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
 SMTP_PASSWORD = "plai shuq mokq ijdl"
 
 DB_NAME = "users.db"
 
----------------------------------------------------
-
-تهيئة قاعدة البيانات
-
----------------------------------------------------
+# ---------------------------------------------------
+# تهيئة قاعدة البيانات
+# ---------------------------------------------------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -45,15 +41,13 @@ def init_db():
 
 init_db()
 
----------------------------------------------------
-
-دوال مساعدة
-
----------------------------------------------------
+# ---------------------------------------------------
+# دوال مساعدة
+# ---------------------------------------------------
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-def sendotpemail(toemail: str, otpcode: str):
+def send_otp_email(to_email: str, otp_code: str):
     subject = "رمز التحقق - Hamoudi AI"
     body = f"رمز التحقق الخاص بك هو: {otp_code}"
 
@@ -63,18 +57,16 @@ def sendotpemail(toemail: str, otpcode: str):
     msg["To"] = to_email
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(SMTPEMAIL, SMTPPASSWORD)
+        server.login(SMTP_EMAIL, SMTP_PASSWORD)
         server.send_message(msg)
 
----------------------------------------------------
-
-تسجيل الدخول
-
----------------------------------------------------
+# ---------------------------------------------------
+# تسجيل الدخول
+# ---------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        logintype = request.form.get("logintype", "password")
+        login_type = request.form.get("login_type", "password")
 
         # تسجيل دخول بكلمة مرور
         if login_type == "password":
@@ -90,11 +82,11 @@ def login():
             if not user:
                 return render_template("login.html", error="لا يوجد حساب بهذا البريد.")
 
-            userid, username, emaildb, passwordhashdb = user
-            if hashpassword(password) != passwordhash_db:
+            user_id, username, email_db, password_hash_db = user
+            if hash_password(password) != password_hash_db:
                 return render_template("login.html", error="كلمة المرور غير صحيحة.")
 
-            session["userid"] = userid
+            session["user_id"] = user_id
             session["username"] = username
             session["email"] = email_db
             session.permanent = True
@@ -124,13 +116,13 @@ def login():
             conn.close()
 
             otp_code = str(random.randint(100000, 999999))
-            session["pendingotp"] = otpcode
+            session["pending_otp"] = otp_code
             session["pending_email"] = email
-            session["pendinguserid"] = user_id
+            session["pending_user_id"] = user_id
             session["pending_username"] = username
 
             try:
-                sendotpemail(email, otp_code)
+                send_otp_email(email, otp_code)
             except Exception as e:
                 print("OTP Error:", repr(e))
                 return render_template("login.html", error="تعذر إرسال رمز التحقق.")
@@ -142,16 +134,14 @@ def login():
 
     return render_template("login.html")
 
----------------------------------------------------
-
-صفحة التحقق من OTP
-
----------------------------------------------------
+# ---------------------------------------------------
+# صفحة التحقق من OTP
+# ---------------------------------------------------
 @app.route("/verify")
 def verify():
     if "pending_email" not in session:
         return redirect("/")
-    return rendertemplate("verify.html", email=session.get("pendingemail"))
+    return render_template("verify.html", email=session.get("pending_email"))
 
 @app.route("/verify_otp", methods=["POST"])
 def verify_otp():
@@ -159,28 +149,26 @@ def verify_otp():
         return redirect("/")
 
     user_input = request.form.get("otp", "")
-    realotp = session.get("pendingotp")
+    real_otp = session.get("pending_otp")
 
-    if userinput != realotp:
-        return rendertemplate("verify.html", email=session.get("pendingemail"), error="رمز غير صحيح.")
+    if user_input != real_otp:
+        return render_template("verify.html", email=session.get("pending_email"), error="رمز غير صحيح.")
 
-    session["userid"] = session.get("pendinguser_id")
+    session["user_id"] = session.get("pending_user_id")
     session["username"] = session.get("pending_username")
     session["email"] = session.get("pending_email")
     session.permanent = True
 
     session.pop("pending_otp", None)
     session.pop("pending_email", None)
-    session.pop("pendinguserid", None)
+    session.pop("pending_user_id", None)
     session.pop("pending_username", None)
 
     return redirect("/chat")
 
----------------------------------------------------
-
-صفحة الشات
-
----------------------------------------------------
+# ---------------------------------------------------
+# صفحة الشات
+# ---------------------------------------------------
 @app.route("/chat")
 def chat():
     if "user_id" not in session:
@@ -188,20 +176,18 @@ def chat():
 
     email = (session.get("email") or "").lower().encode("utf-8")
     email_hash = hashlib.md5(email).hexdigest()
-    profileimage = f"https://www.gravatar.com/avatar/{emailhash}?d=identicon"
+    profile_image = f"https://www.gravatar.com/avatar/{email_hash}?d=identicon"
 
     return render_template(
         "index.html",
         username=session.get("username"),
         email=session.get("email"),
-        profileimage=profileimage
+        profile_image=profile_image
     )
 
----------------------------------------------------
-
-API الشات (Groq) مع هوية وتواصل وجنسية وعمر وسكن
-
----------------------------------------------------
+# ---------------------------------------------------
+# API الشات (Groq)
+# ---------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     if "user_id" not in session:
@@ -211,13 +197,13 @@ def api_chat():
     if not user_message:
         return jsonify({"error": "الرسالة فارغة"}), 400
 
-    if not GROQAPIKEY:
+    if not GROQ_API_KEY:
         return jsonify({"error": "API Key غير موجود"}), 500
 
     try:
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
-            "Authorization": f"Bearer {GROQAPIKEY}",
+            "Authorization": f"Bearer {GROQ_API_KEY}",
             "Content-Type": "application/json",
         }
         payload = {
@@ -241,7 +227,7 @@ def api_chat():
         }
 
         r = requests.post(url, headers=headers, json=payload, timeout=60)
-        r.raiseforstatus()
+        r.raise_for_status()
 
         j = r.json()
         reply = j["choices"][0]["message"]["content"]
@@ -251,20 +237,16 @@ def api_chat():
         print("Chat Error:", repr(e))
         return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
 
----------------------------------------------------
-
-تسجيل الخروج
-
----------------------------------------------------
+# ---------------------------------------------------
+# تسجيل الخروج
+# ---------------------------------------------------
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
----------------------------------------------------
-
-تشغيل السيرفر
-
----------------------------------------------------
-if name == "main":
+# ---------------------------------------------------
+# تشغيل السيرفر
+# ---------------------------------------------------
+if __name__ == "__main__":
     app.run(debug=True)
