@@ -14,14 +14,15 @@ app.secret_key = "CHANGE_THIS_SECRET_KEY"
 
 app.permanent_session_lifetime = timedelta(days=7)
 
-GROQ_API_KEY = "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"
+# استخدم مسار مؤقت للـ SQLite حتى يعمل على Vercel
+DB_NAME = "/tmp/users.db"
+
+GROQ_API_KEY = "YOUR_GROQ_API_KEY"
 SMTP_EMAIL = "hamoudi4app@gmail.com"
-SMTP_PASSWORD = "plai shuq mokq ijdl"
+SMTP_PASSWORD = "YOUR_SMTP_PASSWORD"
 
 GOOGLE_CLIENT_ID = "709177062776-hu34l98t1pj2keum1j8ci0lemb1bh3im.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
-
-DB_NAME = "users.db"
 
 
 def init_db():
@@ -266,14 +267,4 @@ def api_chat():
 
     except Exception as e:
         print("Chat Error:", repr(e))
-        return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
-
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}),
