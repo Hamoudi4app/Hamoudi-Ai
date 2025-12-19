@@ -14,9 +14,9 @@ app.secret_key = "CHANGE_THIS_SECRET_KEY"
 app.permanent_session_lifetime = timedelta(days=7)
 
 # مفاتيح — املأها بنفسك
-GROQ_API_KEY = ""    # ضع مفتاح GROQ هنا
-SMTP_EMAIL = ""      # بريد Gmail الذي سيرسل OTP
-SMTP_PASSWORD = ""   # App Password من Gmail
+GROQ_API_KEY = "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"    # ضع مفتاح GROQ هنا
+SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
+SMTP_PASSWORD = "plai shuq mokq ijdl"   # App Password من Gmail
 
 DB_NAME = "users.db"
 
