@@ -54,7 +54,7 @@
             outline: none;
         }
 
-        button {
+        button, a.btn-google {
             width: 100%;
             padding: 12px;
             margin-top: 12px;
@@ -63,6 +63,9 @@
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
+            display: inline-block;
+            text-decoration: none;
+            text-align: center;
         }
 
         .btn-login {
@@ -72,6 +75,11 @@
 
         .btn-otp {
             background: linear-gradient(90deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .btn-google {
+            background: linear-gradient(90deg, #db4437, #c5221f);
             color: #fff;
         }
 
@@ -115,6 +123,11 @@
 
         <button class="btn-otp">تسجيل الدخول بالرمز</button>
     </form>
+
+    <hr style="margin: 20px 0; border-color: #334155;">
+
+    <!-- تسجيل دخول بواسطة Google -->
+    <a href="/google" class="btn-google">تسجيل الدخول بواسطة Google</a>
 
 </div>
 
