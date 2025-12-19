@@ -3,28 +3,27 @@ import smtplib
 import random
 import hashlib
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, redirect, session, jsonify, url_for
 import requests
 from datetime import timedelta
+
+from flask_dance.contrib.google import make_google_blueprint, google
 
 app = Flask(__name__)
 app.secret_key = "CHANGE_THIS_SECRET_KEY"
 
-# مدة الجلسة الدائمة
 app.permanent_session_lifetime = timedelta(days=7)
 
-# ---------------------------------------------------
-# مفاتيح — املأها بنفسك
-# ---------------------------------------------------
 GROQ_API_KEY = "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"
-SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
+SMTP_EMAIL = "hamoudi4app@gmail.com"
 SMTP_PASSWORD = "plai shuq mokq ijdl"
+
+GOOGLE_CLIENT_ID = "709177062776-hu34l98t1pj2keum1j8ci0lemb1bh3im.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
 
 DB_NAME = "users.db"
 
-# ---------------------------------------------------
-# تهيئة قاعدة البيانات
-# ---------------------------------------------------
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -39,13 +38,13 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 init_db()
 
-# ---------------------------------------------------
-# دوال مساعدة
-# ---------------------------------------------------
+
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
 
 def send_otp_email(to_email: str, otp_code: str):
     subject = "رمز التحقق - Hamoudi AI"
@@ -60,15 +59,54 @@ def send_otp_email(to_email: str, otp_code: str):
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
         server.send_message(msg)
 
-# ---------------------------------------------------
-# تسجيل الدخول
-# ---------------------------------------------------
+
+google_bp = make_google_blueprint(
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    scope=["profile", "email"],
+    redirect_to="google_login"
+)
+app.register_blueprint(google_bp, url_prefix="/login")
+
+
+@app.route("/google")
+def google_login():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    resp = google.get("/oauth2/v2/userinfo")
+    user_info = resp.json()
+
+    email = (user_info.get("email") or "").lower()
+    username = user_info.get("name") or (email.split("@")[0] if email else "User")
+
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
+    user = c.fetchone()
+    if not user:
+        c.execute(
+            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+            (username, email, hash_password("google"))
+        )
+        conn.commit()
+        c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
+        user = c.fetchone()
+    user_id, username = user
+    conn.close()
+
+    session["user_id"] = user_id
+    session["username"] = username
+    session["email"] = email
+    session.permanent = True
+
+    return redirect("/chat")
+
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         login_type = request.form.get("login_type", "password")
 
-        # تسجيل دخول بكلمة مرور
         if login_type == "password":
             email = request.form.get("email", "").strip().lower()
             password = request.form.get("password", "")
@@ -93,7 +131,6 @@ def login():
 
             return redirect("/chat")
 
-        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
@@ -103,7 +140,7 @@ def login():
             user = c.fetchone()
 
             if not user:
-                username = email.split("@")[0]
+                username = email.split("@")[0] if "@" in email else "User"
                 c.execute(
                     "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
                     (username, email, hash_password("temp"))
@@ -134,14 +171,13 @@ def login():
 
     return render_template("login.html")
 
-# ---------------------------------------------------
-# صفحة التحقق من OTP
-# ---------------------------------------------------
+
 @app.route("/verify")
 def verify():
     if "pending_email" not in session:
         return redirect("/")
     return render_template("verify.html", email=session.get("pending_email"))
+
 
 @app.route("/verify_otp", methods=["POST"])
 def verify_otp():
@@ -166,9 +202,7 @@ def verify_otp():
 
     return redirect("/chat")
 
-# ---------------------------------------------------
-# صفحة الشات
-# ---------------------------------------------------
+
 @app.route("/chat")
 def chat():
     if "user_id" not in session:
@@ -185,9 +219,7 @@ def chat():
         profile_image=profile_image
     )
 
-# ---------------------------------------------------
-# API الشات (Groq)
-# ---------------------------------------------------
+
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     if "user_id" not in session:
@@ -228,7 +260,6 @@ def api_chat():
 
         r = requests.post(url, headers=headers, json=payload, timeout=60)
         r.raise_for_status()
-
         j = r.json()
         reply = j["choices"][0]["message"]["content"]
         return jsonify({"reply": reply})
@@ -237,17 +268,12 @@ def api_chat():
         print("Chat Error:", repr(e))
         return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
 
-# ---------------------------------------------------
-# تسجيل الخروج
-# ---------------------------------------------------
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-# ---------------------------------------------------
-# تشغيل السيرفر
-# ---------------------------------------------------
+
 if __name__ == "__main__":
     app.run(debug=True)
-    
