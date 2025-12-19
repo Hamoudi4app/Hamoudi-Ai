@@ -4,65 +4,50 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hamoudi AI - الشات</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
   <style>
-    body { margin:0; background:#020617; color:#e5e7eb; font-family:"Segoe UI",sans-serif; }
-    .bg { position:fixed; inset:0; background: radial-gradient(circle at 20% 20%, #0ea5e9aa, transparent 60%), radial-gradient(circle at 80% 80%, #6366f1aa, transparent 60%); filter:blur(80px); z-index:-1; }
-    .chat-container { width:100%; max-width:900px; height:100vh; margin:0 auto; background:rgba(15,23,42,0.93); display:flex; flex-direction:column; backdrop-filter:blur(12px); }
-    .chat-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #1e293b; background:linear-gradient(to right, #02061755, #0b112055); }
-    .chat-title span:first-child { font-weight:bold; }
-    .profile-icon { width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid #0ea5e9; box-shadow:0 0 10px #0ea5e9aa; cursor:pointer; }
-    .chat-messages { flex:1; padding:12px 16px; overflow-y:auto; scroll-behavior:smooth; }
-    .message { max-width:80%; margin-bottom:10px; padding:8px 12px; border-radius:10px; line-height:1.5; white-space:pre-wrap; }
-    .user-message { margin-left:auto; background:#0ea5e9; color:#0f172a; border-bottom-right-radius:0; }
-    .ai-message { margin-right:auto; background:#111827; color:#e5e7eb; border-bottom-left-radius:0; border:1px solid #1f2937; }
-    .chat-input-area { padding:10px 12px; border-top:1px solid #1e293b; display:flex; gap:8px; background:#020617dd; position:sticky; bottom:0; }
-    .chat-input-area textarea { flex:1; resize:none; border-radius:10px; border:1px solid #1e293b; background:#020617; color:#e5e7eb; padding:8px 10px; min-height:40px; max-height:120px; outline:none; }
-    .send-btn { padding:0 16px; border-radius:10px; border:none; background:linear-gradient(90deg,#0ea5e9,#6366f1); color:#f9fafb; cursor:pointer; font-weight:bold; box-shadow:0 0 15px #0ea5e955; }
+    body { margin:0; background:#0f172a; color:#e5e7eb; font-family:"Segoe UI",sans-serif; }
+    .chat-container { width:100%; height:100vh; display:flex; flex-direction:column; }
+    .chat-header { display:flex; align-items:center; justify-content:space-between; padding:12px; background:#1e293b; }
+    .chat-title { font-weight:bold; font-size:1.1rem; }
+    .profile-icon { width:42px; height:42px; border-radius:50%; cursor:pointer; border:2px solid #0ea5e9; }
+    .chat-messages { flex:1; padding:12px; overflow-y:auto; background:#0f172a; }
+    .message { max-width:80%; margin-bottom:10px; padding:10px; border-radius:10px; line-height:1.5; }
+    .user-message { margin-left:auto; background:#0ea5e9; color:#0f172a; }
+    .ai-message { margin-right:auto; background:#1e293b; color:#e5e7eb; }
+    .chat-input-area { display:flex; padding:10px; background:#1e293b; }
+    textarea { flex:1; resize:none; border-radius:8px; border:none; padding:10px; background:#0f172a; color:#e5e7eb; }
+    .send-btn { margin-right:8px; padding:0 16px; border:none; border-radius:8px; background:#0ea5e9; color:#0f172a; font-weight:bold; cursor:pointer; }
     .message a { color:#38bdf8; text-decoration:underline; }
-    .message a:hover { color:#0ea5e9; text-shadow:0 0 8px #0ea5e9; }
-    @media (max-width:600px){ .message{max-width:90%;} }
 
     /* Sidebar */
-    .sidebar-overlay {
-      position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; z-index:9;
-      animation: fadeIn 0.3s ease forwards;
-    }
-    .sidebar {
-      position:fixed; top:0; right:-260px; width:260px; height:100%; background:#111827;
-      box-shadow:-2px 0 10px rgba(0,0,0,0.5); z-index:10; padding:20px; display:flex; flex-direction:column; align-items:center;
-      transition:right 0.4s ease;
-    }
+    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; z-index:9; }
+    .sidebar { position:fixed; top:0; right:-300px; width:300px; height:100%; background:#111827; z-index:10; padding:20px; display:flex; flex-direction:column; align-items:center; transition:right 0.3s ease; }
     .sidebar.open { right:0; }
     .sidebar img { width:80px; height:80px; border-radius:50%; border:2px solid #0ea5e9; margin-bottom:20px; }
-    .logout-btn {
-      background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
+    .logout-btn { background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.2s; }
     .logout-btn:hover { transform:scale(1.05); box-shadow:0 0 12px #ef4444aa; }
     .dev-info { margin-top:auto; font-size:0.9rem; color:#94a3b8; text-align:center; }
-    .dev-info a { color:#0ea5e9; text-decoration:none; font-weight:bold; }
+    .dev-info a { color:#0ea5e9; font-weight:bold; text-decoration:none; }
     .dev-info a:hover { text-shadow:0 0 8px #0ea5e9; }
-    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+    /* Responsive */
+    @media (max-width:600px){
+      .message{max-width:95%;}
+      .sidebar{width:80%;}
+    }
   </style>
 </head>
 <body>
-  <div class="bg"></div>
-
   <div class="chat-container">
     <div class="chat-header">
-      <div class="chat-title">
-        <span>Hamoudi AI</span>
-        <span>مرحبًا {{ username }} 👋</span>
-      </div>
+      <div class="chat-title">Hamoudi AI</div>
       <img src="{{ profile_image }}" class="profile-icon" id="profileBtn" />
     </div>
 
     <div id="messages" class="chat-messages">
       <div class="message ai-message">
         مرحبًا بك في Hamoudi AI.<br>
-        اسألني ما تشاء، وسأجيبك بالعربية فقط.<br>
-        مثال: تقدر تتواصل مع المطور محمد فيصل عبر الرابط التالي: https://my-profile-4w23.vercel.app/
+        مثال: تقدر تتواصل مع المطور <a href="https://my-profile-4w23.vercel.app/" target="_blank">محمد فيصل</a>
       </div>
     </div>
 
@@ -95,9 +80,7 @@
       const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
       return text.replace(urlRegex, function(url) {
         let href = url;
-        if (!href.startsWith("http")) {
-          href = "http://" + href;
-        }
+        if (!href.startsWith("http")) href = "http://" + href;
         return `<a href="${href}" target="_blank" rel="noopener">${url}</a>`;
       });
     }
@@ -113,19 +96,13 @@
     async function sendMessage() {
       const text = userInput.value.trim();
       if (!text) return;
-
       addMessage(text, true);
       userInput.value = "";
-      userInput.focus();
-
       const typing = document.createElement("div");
       typing.classList.add("message", "ai-message");
       typing.textContent = "Hamoudi AI يكتب...";
       messagesContainer.appendChild(typing);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
       sendBtn.disabled = true;
-
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
@@ -134,8 +111,33 @@
         });
         const data = await resp.json();
         typing.remove();
+        if (data.reply) addMessage(data.reply, false);
+        else addMessage("خطأ: " + (data.error || "تعذر جلب رد"), false);
+      } catch {
+        typing.remove();
+        addMessage("تعذر الاتصال بالخادم.", false);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
 
-        if (data.reply) {
-          addMessage(data.reply, false);
-        } else {
-          addMessage("خطأ: " + (data.error || "تعذر جلب رد"), false);
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Sidebar toggle
+    profileBtn.addEventListener("click", () => {
+      sidebar.classList.add("open");
+      sidebarOverlay.style.display = "block";
+    });
+    sidebarOverlay.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      sidebarOverlay.style.display = "none";
+    });
+  </script>
+</body>
+</html>
