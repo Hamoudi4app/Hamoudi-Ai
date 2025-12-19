@@ -11,7 +11,7 @@
     .chat-container { width:100%; max-width:900px; height:100vh; margin:0 auto; background:rgba(15,23,42,0.93); display:flex; flex-direction:column; backdrop-filter:blur(12px); }
     .chat-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #1e293b; background:linear-gradient(to right, #02061755, #0b112055); }
     .chat-title span:first-child { font-weight:bold; }
-    .profile-icon { width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid #0ea5e9; box-shadow:0 0 10px #0ea5e9aa; }
+    .profile-icon { width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid #0ea5e9; box-shadow:0 0 10px #0ea5e9aa; cursor:pointer; }
     .chat-messages { flex:1; padding:12px 16px; overflow-y:auto; scroll-behavior:smooth; }
     .message { max-width:80%; margin-bottom:10px; padding:8px 12px; border-radius:10px; line-height:1.5; white-space:pre-wrap; }
     .user-message { margin-left:auto; background:#0ea5e9; color:#0f172a; border-bottom-right-radius:0; }
@@ -22,6 +22,28 @@
     .message a { color:#38bdf8; text-decoration:underline; }
     .message a:hover { color:#0ea5e9; text-shadow:0 0 8px #0ea5e9; }
     @media (max-width:600px){ .message{max-width:90%;} }
+
+    /* Sidebar */
+    .sidebar-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; z-index:9;
+      animation: fadeIn 0.3s ease forwards;
+    }
+    .sidebar {
+      position:fixed; top:0; right:-260px; width:260px; height:100%; background:#111827;
+      box-shadow:-2px 0 10px rgba(0,0,0,0.5); z-index:10; padding:20px; display:flex; flex-direction:column; align-items:center;
+      transition:right 0.4s ease;
+    }
+    .sidebar.open { right:0; }
+    .sidebar img { width:80px; height:80px; border-radius:50%; border:2px solid #0ea5e9; margin-bottom:20px; }
+    .logout-btn {
+      background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .logout-btn:hover { transform:scale(1.05); box-shadow:0 0 12px #ef4444aa; }
+    .dev-info { margin-top:auto; font-size:0.9rem; color:#94a3b8; text-align:center; }
+    .dev-info a { color:#0ea5e9; text-decoration:none; font-weight:bold; }
+    .dev-info a:hover { text-shadow:0 0 8px #0ea5e9; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
   </style>
 </head>
 <body>
@@ -33,7 +55,7 @@
         <span>Hamoudi AI</span>
         <span>مرحبًا {{ username }} 👋</span>
       </div>
-      <img src="{{ profile_image }}" class="profile-icon" />
+      <img src="{{ profile_image }}" class="profile-icon" id="profileBtn" />
     </div>
 
     <div id="messages" class="chat-messages">
@@ -50,12 +72,25 @@
     </div>
   </div>
 
+  <!-- Sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar">
+    <img src="{{ profile_image }}" alt="Profile" />
+    <button class="logout-btn" onclick="window.location.href='/logout'">تسجيل الخروج</button>
+    <div class="dev-info">
+      تم التطوير بواسطة — <a href="https://my-profile-4w23.vercel.app/" target="_blank">محمد فيصل</a>
+    </div>
+  </div>
+
   <script>
     const messagesContainer = document.getElementById("messages");
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
+    const profileBtn = document.getElementById("profileBtn");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
 
-    // دالة لتحويل الروابط إلى <a>
+    // linkify
     function linkify(text) {
       const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
       return text.replace(urlRegex, function(url) {
@@ -70,7 +105,7 @@
     function addMessage(text, isUser = false) {
       const div = document.createElement("div");
       div.classList.add("message", isUser ? "user-message" : "ai-message");
-      div.innerHTML = linkify(text); // استخدام innerHTML مع linkify
+      div.innerHTML = linkify(text);
       messagesContainer.appendChild(div);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
@@ -104,22 +139,3 @@
           addMessage(data.reply, false);
         } else {
           addMessage("خطأ: " + (data.error || "تعذر جلب رد"), false);
-        }
-      } catch {
-        typing.remove();
-        addMessage("تعذر الاتصال بالخادم.", false);
-      } finally {
-        sendBtn.disabled = false;
-      }
-    }
-
-    sendBtn.addEventListener("click", sendMessage);
-    userInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-  </script>
-</body>
-</html>
