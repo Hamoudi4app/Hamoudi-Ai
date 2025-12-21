@@ -17,9 +17,9 @@ app.permanent_session_lifetime = timedelta(days=7)
 # ---------------------------------------------------
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
-GROQ_API_KEY = "ضع هنا مفتاح GROQ"  # مثال: gsk_************************
+GROQ_API_KEY = "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"  # مثال: gsk_************************
 SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
-SMTP_PASSWORD = "ضع هنا كلمة مرور تطبيق Gmail"  # كلمة مرور التطبيق من إعدادات الأمان
+SMTP_PASSWORD = "plai shuq mokq ijdl"  # كلمة مرور التطبيق من إعدادات الأمان
 
 DB_NAME = "users.db"
 
