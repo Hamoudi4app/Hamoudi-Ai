@@ -55,27 +55,22 @@
       text-align: left;
     }
 
-    .links {
-      background: #f9f9f9;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-      text-align: center;
+    .images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
     }
 
-    .links a {
-      display: inline-block;
-      margin: 5px 10px;
-      padding: 8px 14px;
-      border-radius: 20px;
-      background: #4facfe;
-      color: #fff;
+    .images a {
       text-decoration: none;
+      color: #4facfe;
       font-size: 14px;
-      transition: background 0.2s;
+      word-break: break-word;
     }
 
-    .links a:hover {
-      background: #00c6ff;
+    .images a:hover {
+      text-decoration: underline;
     }
 
     #input-area {
@@ -112,13 +107,6 @@
 </head>
 <body>
   <header>💬 Hamoudi AI Chat</header>
-
-  <!-- روابط خارجية -->
-  <div class="links">
-    <a href="https://my-profile-4w23.vercel.app/" target="_blank">تواصل مع المطور محمد فيصل</a>
-    <a href="https://smart-translator-jx1b.vercel.app/" target="_blank">تطبيق Smart Translator</a>
-  </div>
-
   <div id="chat"></div>
   <div id="input-area">
     <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
@@ -128,10 +116,39 @@
   <script>
     const chatBox = document.getElementById("chat");
 
+    // 🔗 تحويل أي نص يحتوي على روابط إلى روابط قابلة للضغط
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, function(url) {
+        return '<a href="' + url + '" target="_blank">' + url + '</a>';
+      });
+    }
+
     function addMessage(text, sender="ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
-      div.textContent = text;
+      div.innerHTML = linkify(text); // ✅ الروابط تتحول تلقائيًا لنص قابل للضغط
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function addImages(images, titleText="صور") {
+      const div = document.createElement("div");
+      div.className = "message ai";
+      const title = document.createElement("div");
+      title.textContent = titleText;
+      div.appendChild(title);
+
+      const imgContainer = document.createElement("div");
+      imgContainer.className = "images";
+      images.forEach(img => {
+        const link = document.createElement("a");
+        link.href = img.image;
+        link.target = "_blank";
+        link.textContent = img.title || img.image;
+        imgContainer.appendChild(link);
+      });
+      div.appendChild(imgContainer);
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
@@ -142,6 +159,36 @@
       if (!text) return;
       addMessage(text, "user");
       input.value = "";
+
+      const isImageQuery =
+        text.startsWith("هات صور") ||
+        text.startsWith("صورة") ||
+        text.includes("صور عن") ||
+        text.includes("اعرض صور") ||
+        text.includes("صور لـ") ||
+        text.includes("صور ل ") ||
+        text.includes("المطور محمد فيصل");
+
+      if (isImageQuery) {
+        const q = text
+          .replace(/^هات صور\s*/, "")
+          .replace(/^صورة\s*/, "")
+          .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
+          .trim() || text;
+
+        try {
+          const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
+          const data = await resp.json();
+          if (data.images && data.images.length > 0) {
+            addImages(data.images, `صور عن ${q}`);
+          } else {
+            addMessage("لم أجد صور مناسبة.", "ai");
+          }
+        } catch (err) {
+          addMessage("حدث خطأ أثناء جلب الصور.", "ai");
+        }
+        return;
+      }
 
       try {
         const resp = await fetch("/api/chat", {
