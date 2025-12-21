@@ -176,6 +176,13 @@
       background: #444;
       color: #eee;
     }
+
+    /* 📱 متجاوب مع الهاتف */
+    @media (max-width: 768px) {
+      #sidebar {
+        width: 100%; /* يغطي الشاشة بالكامل */
+      }
+    }
   </style>
 </head>
 <body>
@@ -210,11 +217,10 @@
       sidebar.classList.toggle("active");
     });
 
-    // زر تسجيل الخروج
+    // زر تسجيل الخروج → يفتح صفحة تسجيل الدخول
     logoutBtn.addEventListener("click", () => {
       localStorage.clear();
-      alert("تم تسجيل الخروج");
-      window.location.href = "login.html"; // يرجع لصفحة البداية
+      window.location.href = "login.html"; 
     });
 
     function linkify(text) {
