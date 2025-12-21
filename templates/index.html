@@ -5,31 +5,35 @@
   <title>Hamoudi AI Chat</title>
   <!-- خط عربي جميل -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- مهم للتجاوب -->
   <style>
     body {
       font-family: "Cairo", sans-serif;
       background: linear-gradient(135deg, #1f1c2c, #928dab);
       margin: 0;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
     #chat {
-      max-width: 700px;
-      margin: 40px auto;
+      flex: 1;
+      max-width: 100%;
+      margin: 0 auto;
       background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      height: 70vh;
+      padding: 15px;
+      border-radius: 12px 12px 0 0;
       overflow-y: auto;
     }
 
     .message {
-      margin: 10px 0;
-      padding: 12px 16px;
+      margin: 8px 0;
+      padding: 10px 14px;
       border-radius: 20px;
       max-width: 80%;
       word-wrap: break-word;
+      font-size: 15px;
     }
 
     .user {
@@ -48,9 +52,9 @@
 
     .images {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-      margin-top: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
     }
 
     .images img {
@@ -65,8 +69,9 @@
 
     #input-area {
       display: flex;
-      max-width: 700px;
-      margin: 20px auto;
+      padding: 10px;
+      background: #fff;
+      border-top: 1px solid #ddd;
     }
 
     #input {
@@ -75,11 +80,12 @@
       border-radius: 25px;
       border: 1px solid #ccc;
       outline: none;
+      font-size: 15px;
     }
 
     #send-btn {
       margin-left: 10px;
-      padding: 12px 20px;
+      padding: 0 18px;
       border: none;
       border-radius: 25px;
       background: #4facfe;
@@ -90,6 +96,21 @@
 
     #send-btn:hover {
       background: #00c6ff;
+    }
+
+    /* تجاوب مع الشاشات الصغيرة */
+    @media (max-width: 600px) {
+      .message {
+        font-size: 14px;
+        max-width: 90%;
+      }
+      #input {
+        font-size: 14px;
+      }
+      #send-btn {
+        font-size: 16px;
+        padding: 0 14px;
+      }
     }
   </style>
 </head>
@@ -141,7 +162,6 @@
       addMessage(text, "user");
       input.value = "";
 
-      // 👇 شرط يميز طلب الصور
       const isImageQuery =
         text.startsWith("هات صور") ||
         text.startsWith("صور") ||
@@ -171,7 +191,6 @@
         return;
       }
 
-      // 👇 لو مش طلب صور، يروح للـ chatbot
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
