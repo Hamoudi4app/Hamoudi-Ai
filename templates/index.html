@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Hamoudi AI Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- خط عربي جميل -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- مهم للتجاوب -->
   <style>
     body {
       font-family: "Cairo", sans-serif;
@@ -17,13 +17,21 @@
       height: 100vh;
     }
 
+    header {
+      background: #4facfe;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
     #chat {
       flex: 1;
       max-width: 100%;
       margin: 0 auto;
       background: #fff;
       padding: 15px;
-      border-radius: 12px 12px 0 0;
       overflow-y: auto;
     }
 
@@ -98,7 +106,6 @@
       background: #00c6ff;
     }
 
-    /* تجاوب مع الشاشات الصغيرة */
     @media (max-width: 600px) {
       .message {
         font-size: 14px;
@@ -115,6 +122,7 @@
   </style>
 </head>
 <body>
+  <header>💬 Hamoudi AI Chat</header>
   <div id="chat"></div>
   <div id="input-area">
     <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
@@ -162,18 +170,20 @@
       addMessage(text, "user");
       input.value = "";
 
+      // 👇 شرط يميز طلب الصور
       const isImageQuery =
         text.startsWith("هات صور") ||
-        text.startsWith("صور") ||
+        text.startsWith("صورة") ||
         text.includes("صور عن") ||
         text.includes("اعرض صور") ||
         text.includes("صور لـ") ||
-        text.includes("صور ل ");
+        text.includes("صور ل ") ||
+        text.includes("المطور محمد فيصل");
 
       if (isImageQuery) {
         const q = text
           .replace(/^هات صور\s*/, "")
-          .replace(/^صور\s*/, "")
+          .replace(/^صورة\s*/, "")
           .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
           .trim() || text;
 
@@ -191,6 +201,7 @@
         return;
       }
 
+      // 👇 لو مش طلب صور، يروح للـ chatbot
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
