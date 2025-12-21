@@ -30,7 +30,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      z-index: 1000;
+      z-index: 1001;
     }
     #sidebar.active {
       left: 0; /* يظهر عند التفعيل */
@@ -58,6 +58,21 @@
     }
     #logout-btn:hover {
       background: darkred;
+    }
+
+    /* ✅ Overlay للخلفية عند فتح الشريط */
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      z-index: 1000;
+    }
+    #overlay.active {
+      display: block;
     }
 
     /* ✅ الهيدر */
@@ -96,36 +111,6 @@
       background: #fff;
       padding: 15px;
       overflow-y: auto;
-    }
-
-    .message {
-      margin: 8px 0;
-      padding: 10px 14px;
-      border-radius: 20px;
-      max-width: 80%;
-      word-wrap: break-word;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-    }
-
-    .user {
-      background: #4facfe;
-      color: #fff;
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .ai {
-      background: #f5f5f5;
-      color: #333;
-      margin-right: auto;
-      text-align: left;
-    }
-
-    .avatar {
-      margin-right: 8px;
-      font-size: 18px;
     }
 
     #input-area {
@@ -180,12 +165,15 @@
     /* 📱 متجاوب مع الهاتف */
     @media (max-width: 768px) {
       #sidebar {
-        width: 100%; /* يغطي الشاشة بالكامل */
+        width: 80%; /* يغطي معظم الشاشة */
       }
     }
   </style>
 </head>
 <body>
+  <!-- ✅ Overlay -->
+  <div id="overlay"></div>
+
   <!-- ✅ الشريط الجانبي -->
   <aside id="sidebar">
     <h3 id="sidebar-username">زائر</h3>
@@ -209,12 +197,20 @@
   <script>
     const chatBox = document.getElementById("chat");
     const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
     const toggleSidebarBtn = document.getElementById("toggle-sidebar");
     const logoutBtn = document.getElementById("logout-btn");
 
     // فتح/إغلاق الشريط الجانبي
     toggleSidebarBtn.addEventListener("click", () => {
       sidebar.classList.toggle("active");
+      overlay.classList.toggle("active");
+    });
+
+    // إغلاق عند الضغط على الخلفية
+    overlay.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+      overlay.classList.remove("active");
     });
 
     // زر تسجيل الخروج → يفتح صفحة تسجيل الدخول
