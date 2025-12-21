@@ -6,7 +6,6 @@ from email.mime.text import MIMEText
 from flask import Flask, render_template, request, redirect, session, jsonify
 import requests
 from datetime import timedelta
-from duckduckgo_search import ddg_images   # ✅ مكتبة البحث عن الصور
 
 app = Flask(__name__)
 app.secret_key = "CHANGE_THIS_SECRET_KEY"
@@ -18,7 +17,7 @@ app.permanent_session_lifetime = timedelta(days=7)
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
 GROQ_API_KEY = "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"
-SMTP_EMAIL = "hamoudi4app@gmail.com"
+SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
 SMTP_PASSWORD = "plai shuq mokq ijdl"
 
 DB_NAME = "users.db"
@@ -94,7 +93,7 @@ def login():
 
             return redirect("/chat")
 
-        # تسجيل دخول عبر OTP
+        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
@@ -210,7 +209,19 @@ def api_chat():
         payload = {
             "model": "llama-3.3-70b-versatile",
             "messages": [
-                {"role": "system", "content": "أنت مساعد ذكي اسمه Hamoudi AI."},
+                {
+                    "role": "system",
+                    "content": (
+                        "أنت مساعد ذكي اسمه Hamoudi AI، تم تطويرك بواسطة محمد فيصل. "
+                        "تجيب دائمًا بالعربية الفصحى بوضوح ومهنية. "
+                        "عند سؤال الهوية مثل: من طورك؟ أو من صنعك؟ تؤكد: تم تطويري بواسطة محمد فيصل. "
+                        "وعند سؤال الجنسية تجاوب بالنص التالي حرفيًا: جنسية المطور محمد فيصل سوداني. "
+                        "وعند سؤال العمر تجاوب بالنص التالي حرفيًا: عمر المطور محمد فيصل 14 سنة. "
+                        "وعند سؤال السكن تجاوب بالنص التالي حرفيًا: المطور محمد فيصل سوداني الجنسية ولكنه يعيش في مصر. "
+                        "وعند سؤال طريقة التواصل مع المطور، تجاوب بالنص التالي حرفيًا: "
+                        "تقدر تتواصل مع المطور محمد فيصل عبر الرابط التالي: https://my-profile-4w23.vercel.app/"
+                    )
+                },
                 {"role": "user", "content": user_message},
             ]
         }
@@ -227,30 +238,6 @@ def api_chat():
         return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
 
 # ---------------------------------------------------
-# API لجلب الصور من الإنترنت (DuckDuckGo)
-# ---------------------------------------------------
-@app.route("/api/images")
-def get_images():
-    query = request.args.get("q", "").strip()
-    if not query:
-        return jsonify({"error": "لا يوجد استعلام"}), 400
-
-    try:
-        results = ddg_images(query, max_results=6)
-        images = [
-            {
-                "title": r.get("title"),
-                "image": r.get("image"),
-                "thumbnail": r.get("thumbnail")
-            }
-            for r in results
-        ]
-        return jsonify({"images": images})
-    except Exception as e:
-        print("DuckDuckGo Error:", repr(e))
-        return jsonify({"error": "تعذر جلب الصور"}), 500
-
-# ---------------------------------------------------
 # تسجيل الخروج
 # ---------------------------------------------------
 @app.route("/logout")
@@ -263,3 +250,4 @@ def logout():
 # ---------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+        
