@@ -6,22 +6,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --sidebar-bg: #2c2c54;
+      --primary: #4facfe;
+      --primary-hover: #00c6ff;
+      --chat-bg: #fff;
+      --ai-bg: #f5f5f5;
+      --ai-text: #333;
+      --user-bg: #4facfe;
+      --user-text: #fff;
+    }
+
     body {
       font-family: "Cairo", sans-serif;
       background: linear-gradient(135deg, #1f1c2c, #928dab);
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column;
       height: 100vh;
       transition: background 0.3s, color 0.3s;
+      direction: rtl;
+    }
+
+    /* الشريط الجانبي */
+    #sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      color: #fff;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #sidebar h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      text-align: center;
+    }
+    #sidebar p {
+      font-size: 14px;
+      text-align: center;
+      margin: 0 0 12px;
+      opacity: 0.9;
+    }
+    #sidebar .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.2);
+      margin: 12px 0;
+    }
+
+    /* المنطقة الرئيسية */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
 
     header {
-      background: #4facfe;
+      background: var(--primary);
       color: #fff;
       padding: 15px;
-      text-align: center;
       font-size: 20px;
       font-weight: bold;
       display: flex;
@@ -39,7 +86,7 @@
 
     #chat {
       flex: 1;
-      background: #fff;
+      background: var(--chat-bg);
       padding: 15px;
       overflow-y: auto;
       transition: background 0.3s, color 0.3s;
@@ -54,25 +101,35 @@
       font-size: 15px;
       display: flex;
       align-items: center;
+      gap: 8px;
     }
 
     .user {
-      background: #4facfe;
-      color: #fff;
-      margin-left: auto;
+      background: var(--user-bg);
+      color: var(--user-text);
+      margin-left: auto; /* يدفع رسالة المستخدم لليمين */
       text-align: right;
     }
 
     .ai {
-      background: #f5f5f5;
-      color: #333;
-      margin-right: auto;
+      background: var(--ai-bg);
+      color: var(--ai-text);
+      margin-right: auto; /* يدفع رسالة البوت لليسار */
       text-align: left;
+      direction: ltr; /* يسمح بعرض الروابط بشكل صحيح */
+    }
+
+    .message a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    .message a:hover {
+      text-decoration: underline;
     }
 
     .avatar {
-      margin-right: 8px;
       font-size: 18px;
+      flex: 0 0 auto;
     }
 
     .images {
@@ -80,10 +137,18 @@
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 10px;
       margin-top: 8px;
+      width: 100%;
+    }
+
+    .images a {
+      display: block;
+      border-radius: 10px;
+      overflow: hidden;
     }
 
     .images img {
       width: 100%;
+      display: block;
       border-radius: 10px;
       transition: transform 0.2s;
     }
@@ -97,6 +162,7 @@
       padding: 10px;
       background: #fff;
       border-top: 1px solid #ddd;
+      gap: 10px;
     }
 
     #input {
@@ -109,21 +175,20 @@
     }
 
     #send-btn {
-      margin-left: 10px;
       padding: 0 18px;
       border: none;
       border-radius: 25px;
-      background: #4facfe;
+      background: var(--primary);
       color: #fff;
       cursor: pointer;
       font-size: 18px;
     }
 
     #send-btn:hover {
-      background: #00c6ff;
+      background: var(--primary-hover);
     }
 
-    /* 🌗 الوضع الداكن */
+    /* الوضع الداكن */
     body.dark-mode {
       background: #121212;
       color: #eee;
@@ -140,44 +205,67 @@
       background: #444;
       color: #eee;
     }
+
+    /* استجابة للجوال: إخفاء الشريط الجانبي بزر اختياري لاحقاً */
+    @media (max-width: 768px) {
+      #sidebar {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
-  <header>
-    💬 Hamoudi AI Chat
-    <button id="toggle-theme">🌓</button>
-  </header>
-  <div id="chat"></div>
-  <div id="input-area">
-    <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
-    <button id="send-btn" onclick="sendMessage()">➤</button>
+  <!-- الشريط الجانبي -->
+  <aside id="sidebar">
+    <h3 id="sidebar-username">زائر</h3>
+    <p>مرحباً بك في Hamoudi Chat</p>
+    <div class="divider"></div>
+    <!-- يمكنك لاحقاً إضافة روابط ثابتة هنا إن رغبت -->
+  </aside>
+
+  <!-- المنطقة الرئيسية -->
+  <div class="main">
+    <header>
+      💬 Hamoudi AI Chat
+      <button id="toggle-theme">🌓</button>
+    </header>
+
+    <div id="chat"></div>
+
+    <div id="input-area">
+      <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
+      <button id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
   </div>
 
   <script>
     const chatBox = document.getElementById("chat");
 
-    // 🔗 تحويل النصوص التي تحتوي على روابط إلى روابط قابلة للضغط
+    // تحويل النصوص التي تحتوي على روابط إلى روابط قابلة للضغط
     function linkify(text) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, function(url) {
-        return '<a href="' + url + '" target="_blank">' + url + '</a>';
+      return text.replace(urlRegex, (url) => {
+        return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
       });
     }
 
-    // 💾 تحميل المحادثة من LocalStorage
+    // تحميل المحادثة واسم المستخدم من LocalStorage
     function loadChat() {
       const history = localStorage.getItem("chatHistory");
       if (history) {
         chatBox.innerHTML = history;
       }
+      const name = localStorage.getItem("username") || "زائر";
+      const nameEl = document.getElementById("sidebar-username");
+      if (nameEl) nameEl.textContent = name;
     }
 
-    // 💾 حفظ المحادثة في LocalStorage
+    // حفظ المحادثة
     function saveChat() {
       localStorage.setItem("chatHistory", chatBox.innerHTML);
     }
 
-    function addMessage(text, sender="ai") {
+    function addMessage(text, sender = "ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
 
@@ -196,35 +284,38 @@
       saveChat();
     }
 
-    function addImages(images, titleText="صور") {
-      const div = document.createElement("div");
-      div.className = "message ai";
+    function addImages(images, titleText = "صور") {
+      const wrapper = document.createElement("div");
+      wrapper.className = "message ai";
 
       const avatar = document.createElement("span");
       avatar.className = "avatar";
       avatar.textContent = "🤖";
-      div.appendChild(avatar);
+      wrapper.appendChild(avatar);
 
       const title = document.createElement("div");
       title.textContent = titleText;
-      div.appendChild(title);
+      wrapper.appendChild(title);
 
       const imgContainer = document.createElement("div");
       imgContainer.className = "images";
-      images.forEach(img => {
+
+      images.forEach((img) => {
         const link = document.createElement("a");
         link.href = img.image;
         link.target = "_blank";
+        link.rel = "noopener noreferrer";
 
         const image = document.createElement("img");
         image.src = img.image;
         image.alt = img.title || "صورة";
-        link.appendChild(image);
 
+        link.appendChild(image);
         imgContainer.appendChild(link);
       });
-      div.appendChild(imgContainer);
-      chatBox.appendChild(div);
+
+      wrapper.appendChild(imgContainer);
+      chatBox.appendChild(wrapper);
       chatBox.scrollTop = chatBox.scrollHeight;
       saveChat();
     }
@@ -270,7 +361,7 @@
         const resp = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text })
+          body: JSON.stringify({ message: text }),
         });
         const data = await resp.json();
         if (data.reply) {
@@ -283,11 +374,11 @@
       }
     }
 
-    // 🌗 تبديل الوضع الداكن والفاتح
+    // تبديل الوضع الداكن والفاتح
     const toggleBtn = document.getElementById("toggle-theme");
     toggleBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
-      saveChat(); // نحفظ الحالة مع المحادثة
+      // يمكنك حفظ حالة الثيم لو حابب لاحقاً
     });
 
     // تحميل المحادثة عند فتح الصفحة
