@@ -31,6 +31,10 @@
     .dev-info a { color:#0ea5e9; font-weight:bold; text-decoration:none; }
     .dev-info a:hover { text-shadow:0 0 8px #0ea5e9; }
 
+    /* Images bubble grid */
+    .images-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .images-grid a img { max-width:120px; border-radius:6px; display:block; }
+
     /* Responsive */
     @media (max-width:600px){
       .message{max-width:95%;}
@@ -94,27 +98,92 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
+    function addImages(images, titleText = "") {
+      const bubble = document.createElement("div");
+      bubble.classList.add("message", "ai-message");
+
+      if (titleText) {
+        const title = document.createElement("div");
+        title.style.marginBottom = "8px";
+        title.textContent = titleText;
+        bubble.appendChild(title);
+      }
+
+      const grid = document.createElement("div");
+      grid.classList.add("images-grid");
+
+      images.forEach(img => {
+        const link = document.createElement("a");
+        link.href = img.image;
+        link.target = "_blank";
+        link.rel = "noopener";
+
+        const imageEl = document.createElement("img");
+        imageEl.src = img.thumbnail || img.image;
+        imageEl.alt = img.title || "صورة";
+
+        link.appendChild(imageEl);
+        grid.appendChild(link);
+      });
+
+      bubble.appendChild(grid);
+      messagesContainer.appendChild(bubble);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
     async function sendMessage() {
       const text = userInput.value.trim();
       if (!text) return;
+
       addMessage(text, true);
       userInput.value = "";
+
       const typing = document.createElement("div");
       typing.classList.add("message", "ai-message");
       typing.textContent = "Hamoudi AI يكتب...";
       messagesContainer.appendChild(typing);
+
       sendBtn.disabled = true;
+
       try {
-        const resp = await fetch("/api/chat", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({message: text})
-        });
-        const data = await resp.json();
-        typing.remove();
-        if (data.reply) addMessage(data.reply, false);
-        else addMessage("خطأ: " + (data.error || "تعذر جلب رد"), false);
-      } catch {
+        // إذا الطلب متعلق بالصور
+        const isImageQuery =
+          text.startsWith("هات صور") ||
+          text.startsWith("صور") ||
+          text.includes("صور عن") ||
+          text.includes("اعرض صور") ||
+          text.includes("صور لـ") ||
+          text.includes("صور ل ");
+
+        if (isImageQuery) {
+          const q = text
+            .replace(/^هات صور\s*/,"")
+            .replace(/^صور\s*/,"")
+            .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/,"")
+            .trim() || text;
+
+          const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
+          const data = await resp.json();
+          typing.remove();
+
+          if (data.images && data.images.length > 0) {
+            addImages(data.images, `صور عن: ${q}`);
+          } else {
+            addMessage("لم أجد صور مناسبة لهذا الطلب.", false);
+          }
+        } else {
+          // رد نصي عادي
+          const resp = await fetch("/api/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({message: text})
+          });
+          const data = await resp.json();
+          typing.remove();
+          if (data.reply) addMessage(data.reply, false);
+          else addMessage("خطأ: " + (data.error || "تعذر جلب رد"), false);
+        }
+      } catch (e) {
         typing.remove();
         addMessage("تعذر الاتصال بالخادم.", false);
       } finally {
