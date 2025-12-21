@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Hamoudi AI Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- خط عربي جميل -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -28,8 +27,6 @@
 
     #chat {
       flex: 1;
-      max-width: 100%;
-      margin: 0 auto;
       background: #fff;
       padding: 15px;
       overflow-y: auto;
@@ -58,21 +55,27 @@
       text-align: left;
     }
 
-    .images {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 8px;
-      margin-top: 8px;
+    .links {
+      background: #f9f9f9;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      text-align: center;
     }
 
-    .images img {
-      width: 100%;
-      border-radius: 10px;
-      transition: transform 0.2s;
+    .links a {
+      display: inline-block;
+      margin: 5px 10px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: #4facfe;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: background 0.2s;
     }
 
-    .images img:hover {
-      transform: scale(1.05);
+    .links a:hover {
+      background: #00c6ff;
     }
 
     #input-area {
@@ -105,24 +108,17 @@
     #send-btn:hover {
       background: #00c6ff;
     }
-
-    @media (max-width: 600px) {
-      .message {
-        font-size: 14px;
-        max-width: 90%;
-      }
-      #input {
-        font-size: 14px;
-      }
-      #send-btn {
-        font-size: 16px;
-        padding: 0 14px;
-      }
-    }
   </style>
 </head>
 <body>
   <header>💬 Hamoudi AI Chat</header>
+
+  <!-- روابط خارجية -->
+  <div class="links">
+    <a href="https://my-profile-4w23.vercel.app/" target="_blank">تواصل مع المطور محمد فيصل</a>
+    <a href="https://smart-translator-jx1b.vercel.app/" target="_blank">تطبيق Smart Translator</a>
+  </div>
+
   <div id="chat"></div>
   <div id="input-area">
     <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
@@ -140,25 +136,6 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function addImages(images, titleText="صور") {
-      const div = document.createElement("div");
-      div.className = "message ai";
-      const title = document.createElement("div");
-      title.textContent = titleText;
-      div.appendChild(title);
-
-      const imgContainer = document.createElement("div");
-      imgContainer.className = "images";
-      images.forEach(img => {
-        const image = document.createElement("img");
-        image.src = img.image; // ✅ استخدم رابط الصورة مباشرة
-        imgContainer.appendChild(image);
-      });
-      div.appendChild(imgContainer);
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
     async function sendMessage() {
       const input = document.getElementById("input");
       const text = input.value.trim();
@@ -166,38 +143,6 @@
       addMessage(text, "user");
       input.value = "";
 
-      // 👇 شرط يميز طلب الصور
-      const isImageQuery =
-        text.startsWith("هات صور") ||
-        text.startsWith("صورة") ||
-        text.includes("صور عن") ||
-        text.includes("اعرض صور") ||
-        text.includes("صور لـ") ||
-        text.includes("صور ل ") ||
-        text.includes("المطور محمد فيصل");
-
-      if (isImageQuery) {
-        const q = text
-          .replace(/^هات صور\s*/, "")
-          .replace(/^صورة\s*/, "")
-          .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
-          .trim() || text;
-
-        try {
-          const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
-          const data = await resp.json();
-          if (data.images && data.images.length > 0) {
-            addImages(data.images, `صور عن ${q}`);
-          } else {
-            addMessage("لم أجد صور مناسبة.", "ai");
-          }
-        } catch (err) {
-          addMessage("حدث خطأ أثناء جلب الصور.", "ai");
-        }
-        return;
-      }
-
-      // 👇 لو مش طلب صور، يروح للـ chatbot
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
