@@ -3,20 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <title>Hamoudi AI Chat</title>
+  <!-- خط عربي جميل -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; }
-    #chat { max-width: 600px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; }
-    .message { margin: 10px 0; padding: 10px; border-radius: 6px; }
-    .user { background: #d1e7dd; text-align: right; }
-    .ai { background: #f8d7da; text-align: left; }
-    .images { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .images img { width: 120px; height: auto; border-radius: 6px; cursor: pointer; }
+    body {
+      font-family: "Cairo", sans-serif;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      margin: 0;
+      padding: 0;
+    }
+
+    #chat {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      height: 70vh;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 12px 16px;
+      border-radius: 20px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .user {
+      background: #4facfe;
+      color: #fff;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .ai {
+      background: #f5f5f5;
+      color: #333;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .images img {
+      width: 100%;
+      border-radius: 10px;
+      transition: transform 0.2s;
+    }
+
+    .images img:hover {
+      transform: scale(1.05);
+    }
+
+    #input-area {
+      display: flex;
+      max-width: 700px;
+      margin: 20px auto;
+    }
+
+    #input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 25px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    #send-btn {
+      margin-left: 10px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 25px;
+      background: #4facfe;
+      color: #fff;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    #send-btn:hover {
+      background: #00c6ff;
+    }
   </style>
 </head>
 <body>
   <div id="chat"></div>
-  <input id="input" type="text" placeholder="اكتب رسالتك هنا..." style="width:80%">
-  <button onclick="sendMessage()">إرسال</button>
+  <div id="input-area">
+    <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
+    <button id="send-btn" onclick="sendMessage()">➤</button>
+  </div>
 
   <script>
     const chatBox = document.getElementById("chat");
@@ -59,7 +141,7 @@
       addMessage(text, "user");
       input.value = "";
 
-      // 👇 هنا الشرط اللي يميز طلب الصور
+      // 👇 شرط يميز طلب الصور
       const isImageQuery =
         text.startsWith("هات صور") ||
         text.startsWith("صور") ||
