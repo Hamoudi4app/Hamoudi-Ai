@@ -150,13 +150,9 @@
       const imgContainer = document.createElement("div");
       imgContainer.className = "images";
       images.forEach(img => {
-        const link = document.createElement("a");
-        link.href = img.image;
-        link.target = "_blank";
         const image = document.createElement("img");
-        image.src = img.thumbnail;
-        link.appendChild(image);
-        imgContainer.appendChild(link);
+        image.src = img.image; // ✅ استخدم رابط الصورة مباشرة
+        imgContainer.appendChild(image);
       });
       div.appendChild(imgContainer);
       chatBox.appendChild(div);
