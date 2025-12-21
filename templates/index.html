@@ -12,15 +12,16 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      background: #f5f5f5; /* خلفية فاتحة */
+      background: #f5f5f5;
     }
 
-    /* ✅ الشريط الجانبي */
+    /* الشريط الجانبي كـ Drawer */
     #sidebar {
       position: fixed;
       top: 0;
-      left: -100%; /* مخفي افتراضياً */
-      width: 250px;
+      left: -100%; /* مخفي افتراضياً بالكامل */
+      width: 280px;
+      max-width: 85vw;
       height: 100%;
       background: #2c2c54;
       color: #fff;
@@ -32,8 +33,7 @@
       z-index: 1001;
     }
     #sidebar.active { left: 0; }
-    #sidebar h3 { margin: 0 0 8px; font-size: 18px; text-align: center; }
-    #sidebar p { font-size: 14px; text-align: center; opacity: 0.9; }
+
     #close-sidebar {
       align-self: flex-end;
       background: transparent;
@@ -41,11 +41,23 @@
       color: #fff;
       font-size: 20px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+    }
+    #sidebar h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      text-align: center;
+    }
+    #sidebar p {
+      font-size: 14px;
+      text-align: center;
+      margin: 0 0 12px;
+      opacity: 0.9;
     }
     #logout-btn {
       margin-top: auto;
-      padding: 10px 20px;
+      width: 100%;
+      padding: 10px 16px;
       background: red;
       color: #fff;
       border: none;
@@ -55,18 +67,17 @@
     }
     #logout-btn:hover { background: darkred; }
 
-    /* ✅ Overlay */
+    /* Overlay للخلفية */
     #overlay {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
+      inset: 0;
+      background: rgba(0,0,0,0.4);
       display: none;
       z-index: 1000;
     }
     #overlay.active { display: block; }
 
-    /* ✅ الهيدر */
+    /* الهيدر */
     header {
       background: #4facfe;
       color: #fff;
@@ -97,12 +108,73 @@
       color: #fff;
     }
 
-    #chat { flex: 1; background: #fff; padding: 15px; overflow-y: auto; }
+    /* منطقة الدردشة */
+    #chat {
+      flex: 1;
+      background: #fff;
+      padding: 15px;
+      overflow-y: auto;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .message {
+      margin: 8px 0;
+      padding: 10px 14px;
+      border-radius: 20px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .user {
+      background: #4facfe;
+      color: #fff;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .ai {
+      background: #f5f5f5;
+      color: #333;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .avatar {
+      margin-right: 8px;
+      font-size: 18px;
+      flex: 0 0 auto;
+    }
+
+    .images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+      width: 100%;
+    }
+    .images a {
+      display: block;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .images img {
+      width: 100%;
+      display: block;
+      border-radius: 10px;
+      transition: transform 0.2s;
+    }
+    .images img:hover { transform: scale(1.05); }
+
+    /* إدخال الرسائل */
     #input-area {
       display: flex;
       padding: 10px;
       background: #fff;
       border-top: 1px solid #ddd;
+      gap: 10px;
     }
     #input {
       flex: 1;
@@ -113,7 +185,6 @@
       font-size: 15px;
     }
     #send-btn {
-      margin-left: 10px;
       padding: 0 18px;
       border: none;
       border-radius: 25px;
@@ -124,23 +195,23 @@
     }
     #send-btn:hover { background: #00c6ff; }
 
-    /* 🌗 الوضع الداكن */
+    /* الوضع الداكن */
     body.dark-mode { background: #121212; color: #eee; }
     body.dark-mode #chat { background: #1e1e1e; color: #eee; }
     body.dark-mode .user { background: #333; color: #fff; }
     body.dark-mode .ai { background: #444; color: #eee; }
 
-    /* 📱 متجاوب مع الهاتف */
+    /* تجاوب الهاتف */
     @media (max-width: 768px) {
-      #sidebar { width: 100%; } /* يغطي الشاشة بالكامل */
+      #sidebar { width: 100%; max-width: 100%; }
     }
   </style>
 </head>
 <body>
-  <!-- ✅ Overlay -->
+  <!-- Overlay -->
   <div id="overlay"></div>
 
-  <!-- ✅ الشريط الجانبي -->
+  <!-- الشريط الجانبي -->
   <aside id="sidebar">
     <button id="close-sidebar">✖</button>
     <h3 id="sidebar-username">زائر</h3>
@@ -148,7 +219,7 @@
     <button id="logout-btn">تسجيل الخروج</button>
   </aside>
 
-  <!-- ✅ الهيدر -->
+  <!-- الهيدر -->
   <header>
     <button id="toggle-sidebar">☰</button>
     Hamoudi Ai
@@ -156,6 +227,7 @@
   </header>
 
   <div id="chat"></div>
+
   <div id="input-area">
     <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
     <button id="send-btn" onclick="sendMessage()">➤</button>
@@ -176,21 +248,26 @@
     });
 
     // إغلاق الشريط
-    closeSidebarBtn.addEventListener("click", () => {
+    function closeDrawer() {
       sidebar.classList.remove("active");
       overlay.classList.remove("active");
-    });
-    overlay.addEventListener("click", () => {
-      sidebar.classList.remove("active");
-      overlay.classList.remove("active");
-    });
+    }
+    closeSidebarBtn.addEventListener("click", closeDrawer);
+    overlay.addEventListener("click", closeDrawer);
 
-    // زر تسجيل الخروج
+    // زر تسجيل الخروج → static/login.html
     logoutBtn.addEventListener("click", () => {
       localStorage.clear();
-      window.location.href = "login.html";
+      window.location.href = "/static/login.html";
     });
 
+    // تحويل الروابط إلى قابلة للنقر
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, url => '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>');
+    }
+
+    // تحميل المحادثة واسم المستخدم
     function loadChat() {
       const history = localStorage.getItem("chatHistory");
       if (history) chatBox.innerHTML = history;
@@ -198,18 +275,23 @@
       document.getElementById("sidebar-username").textContent = name;
     }
 
+    // حفظ المحادثة
     function saveChat() {
       localStorage.setItem("chatHistory", chatBox.innerHTML);
     }
 
-    function addMessage(text, sender="ai") {
+    // إضافة رسالة
+    function addMessage(text, sender = "ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
+
       const avatar = document.createElement("span");
       avatar.className = "avatar";
       avatar.textContent = sender === "user" ? "👤" : "🤖";
+
       const content = document.createElement("span");
-      content.innerHTML = text;
+      content.innerHTML = linkify(text);
+
       div.appendChild(avatar);
       div.appendChild(content);
       chatBox.appendChild(div);
@@ -217,13 +299,84 @@
       saveChat();
     }
 
+    // إضافة صور داخل الرسائل
+    function addImages(images, titleText = "صور") {
+      const div = document.createElement("div");
+      div.className = "message ai";
+
+      const avatar = document.createElement("span");
+      avatar.className = "avatar";
+      avatar.textContent = "🤖";
+      div.appendChild(avatar);
+
+      const title = document.createElement("div");
+      title.textContent = titleText;
+      div.appendChild(title);
+
+      const imgContainer = document.createElement("div");
+      imgContainer.className = "images";
+
+      images.forEach(img => {
+        const link = document.createElement("a");
+        link.href = img.image;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        const image = document.createElement("img");
+        image.src = img.image;
+        image.alt = img.title || "صورة";
+
+        link.appendChild(image);
+        imgContainer.appendChild(link);
+      });
+
+      div.appendChild(imgContainer);
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      saveChat();
+    }
+
+    // إرسال رسالة
     async function sendMessage() {
       const input = document.getElementById("input");
       const text = input.value.trim();
       if (!text) return;
+
       addMessage(text, "user");
       input.value = "";
 
+      // تحديد طلب الصور
+      const isImageQuery =
+        text.startsWith("هات صور") ||
+        text.startsWith("صورة") ||
+        text.includes("صور عن") ||
+        text.includes("اعرض صور") ||
+        text.includes("صور لـ") ||
+        text.includes("صور ل ") ||
+        text.includes("المطور محمد فيصل");
+
+      if (isImageQuery) {
+        const q = text
+          .replace(/^هات صور\s*/, "")
+          .replace(/^صورة\s*/, "")
+          .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
+          .trim() || text;
+
+        try {
+          const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
+          const data = await resp.json();
+          if (data.images && data.images.length > 0) {
+            addImages(data.images, `صور عن ${q}`);
+          } else {
+            addMessage("لم أجد صور مناسبة.", "ai");
+          }
+        } catch (err) {
+          addMessage("حدث خطأ أثناء جلب الصور.", "ai");
+        }
+        return;
+      }
+
+      // الرد النصي من /api/chat
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
@@ -231,17 +384,22 @@
           body: JSON.stringify({ message: text })
         });
         const data = await resp.json();
-        if (data.reply) addMessage(data.reply, "ai");
-        else addMessage(data.error || "خطأ غير معروف", "ai");
-      } catch {
+        if (data.reply) {
+          addMessage(data.reply, "ai");
+        } else {
+          addMessage(data.error || "خطأ غير معروف", "ai");
+        }
+      } catch (err) {
         addMessage("تعذر الاتصال بالخادم.", "ai");
       }
     }
 
+    // تبديل الثيم
     document.getElementById("toggle-theme").addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
     });
 
+    // تحميل عند فتح الصفحة
     window.onload = loadChat;
   </script>
 </body>
