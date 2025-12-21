@@ -17,9 +17,9 @@ app.permanent_session_lifetime = timedelta(days=7)
 # ---------------------------------------------------
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "ضع هنا مفتاح GROQ"  # مثال: gsk_************************
 SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
-SMTP_PASSWORD = "plai shuq mokq ijdl"
+SMTP_PASSWORD = "ضع هنا كلمة مرور تطبيق Gmail"  # كلمة مرور التطبيق من إعدادات الأمان
 
 DB_NAME = "users.db"
 
@@ -249,12 +249,13 @@ def get_images():
 
     # حالة خاصة: صورة المطور محمد فيصل
     if "المطور محمد فيصل" in query or "محمد فيصل" in query:
+        # تأكد أن الملف موجود داخل static/ بهذا الاسم
         return jsonify({
             "images": [
                 {
                     "title": "المطور محمد فيصل",
-                    "image": url_for("static", filename="mohamed.jpg", _external=True),
-                    "thumbnail": url_for("static", filename="mohamed.jpg", _external=True)
+                    "image": url_for("static", filename="1000010259-pica.png", _external=True),
+                    "thumbnail": url_for("static", filename="1000010259-pica.png", _external=True)
                 }
             ]
         })
@@ -291,4 +292,7 @@ def logout():
 # تشغيل السيرفر
 # ---------------------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    # تأكد أن مجلد static موجود
+    if not os.path.isdir(app.static_folder):
+        os.makedirs(app.static_folder, exist_ok=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
