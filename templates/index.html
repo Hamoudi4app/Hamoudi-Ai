@@ -256,9 +256,9 @@
     overlay.addEventListener("click", closeDrawer);
 
     // زر تسجيل الخروج → static/login.html
-    logoutBtn.addEventListener("click", () => {
+logoutBtn.addEventListener("click", () => {
   localStorage.clear();
-  window.location.href = "/templates/login.html"; 
+  window.location.href = "/logout"; // يخلي السيرفر يتولى التحويل إلى صفحة login.html
 });
 
     // تحويل الروابط إلى قابلة للنقر
