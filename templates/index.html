@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Hamoudi AI</title>
+  <title>Hamoudi AI Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -14,6 +14,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      transition: background 0.3s, color 0.3s;
     }
 
     header {
@@ -23,6 +24,17 @@
       text-align: center;
       font-size: 20px;
       font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #toggle-theme {
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #fff;
     }
 
     #chat {
@@ -30,6 +42,7 @@
       background: #fff;
       padding: 15px;
       overflow-y: auto;
+      transition: background 0.3s, color 0.3s;
     }
 
     .message {
@@ -39,6 +52,8 @@
       max-width: 80%;
       word-wrap: break-word;
       font-size: 15px;
+      display: flex;
+      align-items: center;
     }
 
     .user {
@@ -53,6 +68,11 @@
       color: #333;
       margin-right: auto;
       text-align: left;
+    }
+
+    .avatar {
+      margin-right: 8px;
+      font-size: 18px;
     }
 
     .images {
@@ -102,10 +122,31 @@
     #send-btn:hover {
       background: #00c6ff;
     }
+
+    /* 🌗 الوضع الداكن */
+    body.dark-mode {
+      background: #121212;
+      color: #eee;
+    }
+    body.dark-mode #chat {
+      background: #1e1e1e;
+      color: #eee;
+    }
+    body.dark-mode .user {
+      background: #333;
+      color: #fff;
+    }
+    body.dark-mode .ai {
+      background: #444;
+      color: #eee;
+    }
   </style>
 </head>
 <body>
-  <header>💬 Hamoudi AI Chat</header>
+  <header>
+    💬 Hamoudi AI Chat
+    <button id="toggle-theme">🌓</button>
+  </header>
   <div id="chat"></div>
   <div id="input-area">
     <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
@@ -115,7 +156,7 @@
   <script>
     const chatBox = document.getElementById("chat");
 
-    // 🔗 تحويل أي نص يحتوي على روابط إلى روابط قابلة للضغط
+    // 🔗 تحويل النصوص التي تحتوي على روابط إلى روابط قابلة للضغط
     function linkify(text) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       return text.replace(urlRegex, function(url) {
@@ -123,17 +164,47 @@
       });
     }
 
+    // 💾 تحميل المحادثة من LocalStorage
+    function loadChat() {
+      const history = localStorage.getItem("chatHistory");
+      if (history) {
+        chatBox.innerHTML = history;
+      }
+    }
+
+    // 💾 حفظ المحادثة في LocalStorage
+    function saveChat() {
+      localStorage.setItem("chatHistory", chatBox.innerHTML);
+    }
+
     function addMessage(text, sender="ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
-      div.innerHTML = linkify(text); // ✅ الروابط تتحول تلقائيًا لنص قابل للضغط
+
+      const avatar = document.createElement("span");
+      avatar.className = "avatar";
+      avatar.textContent = sender === "user" ? "👤" : "🤖";
+
+      const content = document.createElement("span");
+      content.innerHTML = linkify(text);
+
+      div.appendChild(avatar);
+      div.appendChild(content);
+
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
+      saveChat();
     }
 
     function addImages(images, titleText="صور") {
       const div = document.createElement("div");
       div.className = "message ai";
+
+      const avatar = document.createElement("span");
+      avatar.className = "avatar";
+      avatar.textContent = "🤖";
+      div.appendChild(avatar);
+
       const title = document.createElement("div");
       title.textContent = titleText;
       div.appendChild(title);
@@ -145,7 +216,6 @@
         link.href = img.image;
         link.target = "_blank";
 
-        // ✅ عرض الصورة مباشرة داخل الدردشة
         const image = document.createElement("img");
         image.src = img.image;
         image.alt = img.title || "صورة";
@@ -156,6 +226,7 @@
       div.appendChild(imgContainer);
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
+      saveChat();
     }
 
     async function sendMessage() {
@@ -211,6 +282,16 @@
         addMessage("تعذر الاتصال بالخادم.", "ai");
       }
     }
+
+    // 🌗 تبديل الوضع الداكن والفاتح
+    const toggleBtn = document.getElementById("toggle-theme");
+    toggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      saveChat(); // نحفظ الحالة مع المحادثة
+    });
+
+    // تحميل المحادثة عند فتح الصفحة
+    window.onload = loadChat;
   </script>
 </body>
 </html>
