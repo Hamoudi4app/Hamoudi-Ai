@@ -2,31 +2,38 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Hamoudi AI Chat</title>
+  <title>Hamoudi Ai</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: "Cairo", sans-serif;
-      background: linear-gradient(135deg, #1f1c2c, #928dab);
       margin: 0;
-      padding: 0;
-      display: flex;               /* ✅ لتوزيع الشريط الجانبي + المحتوى */
-      flex-direction: row;         /* ✅ جنب بعض */
       height: 100vh;
-      transition: background 0.3s, color 0.3s;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
     }
 
     /* ✅ الشريط الجانبي */
     #sidebar {
-      width: 220px;
+      position: fixed;
+      top: 0;
+      left: -250px; /* مخفي افتراضياً */
+      width: 250px;
+      height: 100%;
       background: #2c2c54;
       color: #fff;
       padding: 20px;
       box-sizing: border-box;
+      transition: left 0.3s ease;
       display: flex;
       flex-direction: column;
       align-items: center;
+      z-index: 1000;
+    }
+    #sidebar.active {
+      left: 0; /* يظهر عند التفعيل */
     }
     #sidebar h3 {
       margin: 0 0 8px;
@@ -36,31 +43,47 @@
     #sidebar p {
       font-size: 14px;
       text-align: center;
-      margin: 0;
+      margin: 0 0 12px;
       opacity: 0.9;
     }
-
-    /* ✅ الحاوية الرئيسية للمحتوى الأصلي */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
+    #logout-btn {
+      margin-top: auto;
+      padding: 10px 20px;
+      background: red;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #logout-btn:hover {
+      background: darkred;
     }
 
+    /* ✅ الهيدر */
     header {
       background: #4facfe;
       color: #fff;
       padding: 15px;
-      text-align: center;
       font-size: 20px;
       font-weight: bold;
       display: flex;
-      justify-content: space-between;
+      justify-content: center; /* النص في المنتصف */
       align-items: center;
+      position: relative;
     }
-
+    #toggle-sidebar {
+      position: absolute;
+      left: 15px;
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      color: #fff;
+      cursor: pointer;
+    }
     #toggle-theme {
+      position: absolute;
+      right: 15px;
       background: transparent;
       border: none;
       font-size: 20px;
@@ -73,7 +96,6 @@
       background: #fff;
       padding: 15px;
       overflow-y: auto;
-      transition: background 0.3s, color 0.3s;
     }
 
     .message {
@@ -104,23 +126,6 @@
     .avatar {
       margin-right: 8px;
       font-size: 18px;
-    }
-
-    .images {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .images img {
-      width: 100%;
-      border-radius: 10px;
-      transition: transform 0.2s;
-    }
-
-    .images img:hover {
-      transform: scale(1.05);
     }
 
     #input-area {
@@ -171,57 +176,59 @@
       background: #444;
       color: #eee;
     }
-
-    /* 📱 إخفاء الشريط الجانبي على الشاشات الصغيرة (اختياري) */
-    @media (max-width: 768px) {
-      #sidebar { display: none; }
-    }
   </style>
 </head>
 <body>
   <!-- ✅ الشريط الجانبي -->
   <aside id="sidebar">
     <h3 id="sidebar-username">زائر</h3>
-    <p>مرحباً بك في Hamoudi Chat</p>
+    <p>مرحباً بك في Hamoudi Ai</p>
+    <button id="logout-btn">تسجيل الخروج</button>
   </aside>
 
-  <!-- ✅ المحتوى الأصلي داخل حاوية -->
-  <div class="main">
-    <header>
-      💬 Hamoudi AI Chat
-      <button id="toggle-theme">🌓</button>
-    </header>
-    <div id="chat"></div>
-    <div id="input-area">
-      <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
-      <button id="send-btn" onclick="sendMessage()">➤</button>
-    </div>
+  <!-- ✅ الهيدر -->
+  <header>
+    <button id="toggle-sidebar">☰</button>
+    Hamoudi Ai
+    <button id="toggle-theme">🌓</button>
+  </header>
+
+  <div id="chat"></div>
+  <div id="input-area">
+    <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
+    <button id="send-btn" onclick="sendMessage()">➤</button>
   </div>
 
   <script>
     const chatBox = document.getElementById("chat");
+    const sidebar = document.getElementById("sidebar");
+    const toggleSidebarBtn = document.getElementById("toggle-sidebar");
+    const logoutBtn = document.getElementById("logout-btn");
 
-    // 🔗 تحويل النصوص التي تحتوي على روابط إلى روابط قابلة للضغط
+    // فتح/إغلاق الشريط الجانبي
+    toggleSidebarBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+    });
+
+    // زر تسجيل الخروج
+    logoutBtn.addEventListener("click", () => {
+      localStorage.clear();
+      alert("تم تسجيل الخروج");
+      window.location.href = "login.html"; // يرجع لصفحة البداية
+    });
+
     function linkify(text) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, function(url) {
-        return '<a href="' + url + '" target="_blank">' + url + '</a>';
-      });
+      return text.replace(urlRegex, url => '<a href="' + url + '" target="_blank">' + url + '</a>');
     }
 
-    // 💾 تحميل المحادثة من LocalStorage
     function loadChat() {
       const history = localStorage.getItem("chatHistory");
-      if (history) {
-        chatBox.innerHTML = history;
-      }
-      // ✅ تحميل اسم المستخدم للشريط الجانبي
+      if (history) chatBox.innerHTML = history;
       const name = localStorage.getItem("username") || "زائر";
-      const nameEl = document.getElementById("sidebar-username");
-      if (nameEl) nameEl.textContent = name;
+      document.getElementById("sidebar-username").textContent = name;
     }
 
-    // 💾 حفظ المحادثة في LocalStorage
     function saveChat() {
       localStorage.setItem("chatHistory", chatBox.innerHTML);
     }
@@ -229,50 +236,13 @@
     function addMessage(text, sender="ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
-
       const avatar = document.createElement("span");
       avatar.className = "avatar";
       avatar.textContent = sender === "user" ? "👤" : "🤖";
-
       const content = document.createElement("span");
       content.innerHTML = linkify(text);
-
       div.appendChild(avatar);
       div.appendChild(content);
-
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      saveChat();
-    }
-
-    function addImages(images, titleText="صور") {
-      const div = document.createElement("div");
-      div.className = "message ai";
-
-      const avatar = document.createElement("span");
-      avatar.className = "avatar";
-      avatar.textContent = "🤖";
-      div.appendChild(avatar);
-
-      const title = document.createElement("div");
-      title.textContent = titleText;
-      div.appendChild(title);
-
-      const imgContainer = document.createElement("div");
-      imgContainer.className = "images";
-      images.forEach(img => {
-        const link = document.createElement("a");
-        link.href = img.image;
-        link.target = "_blank";
-
-        const image = document.createElement("img");
-        image.src = img.image;
-        image.alt = img.title || "صورة";
-        link.appendChild(image);
-
-        imgContainer.appendChild(link);
-      });
-      div.appendChild(imgContainer);
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
       saveChat();
@@ -285,36 +255,6 @@
       addMessage(text, "user");
       input.value = "";
 
-      const isImageQuery =
-        text.startsWith("هات صور") ||
-        text.startsWith("صورة") ||
-        text.includes("صور عن") ||
-        text.includes("اعرض صور") ||
-        text.includes("صور لـ") ||
-        text.includes("صور ل ") ||
-        text.includes("المطور محمد فيصل");
-
-      if (isImageQuery) {
-        const q = text
-          .replace(/^هات صور\s*/, "")
-          .replace(/^صورة\s*/, "")
-          .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
-          .trim() || text;
-
-        try {
-          const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
-          const data = await resp.json();
-          if (data.images && data.images.length > 0) {
-            addImages(data.images, `صور عن ${q}`);
-          } else {
-            addMessage("لم أجد صور مناسبة.", "ai");
-          }
-        } catch (err) {
-          addMessage("حدث خطأ أثناء جلب الصور.", "ai");
-        }
-        return;
-      }
-
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
@@ -322,24 +262,17 @@
           body: JSON.stringify({ message: text })
         });
         const data = await resp.json();
-        if (data.reply) {
-          addMessage(data.reply, "ai");
-        } else {
-          addMessage(data.error || "خطأ غير معروف", "ai");
-        }
-      } catch (err) {
+        if (data.reply) addMessage(data.reply, "ai");
+        else addMessage(data.error || "خطأ غير معروف", "ai");
+      } catch {
         addMessage("تعذر الاتصال بالخادم.", "ai");
       }
     }
 
-    // 🌗 تبديل الوضع الداكن والفاتح
-    const toggleBtn = document.getElementById("toggle-theme");
-    toggleBtn.addEventListener("click", () => {
+    document.getElementById("toggle-theme").addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
-      saveChat(); // نحفظ المحادثة (اختياري حفظ الثيم لاحقاً)
     });
 
-    // تحميل المحادثة عند فتح الصفحة
     window.onload = loadChat;
   </script>
 </body>
