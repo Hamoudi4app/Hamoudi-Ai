@@ -2,8 +2,9 @@ import sqlite3
 import smtplib
 import random
 import hashlib
+import os
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, redirect, session, jsonify, url_for
 import requests
 from datetime import timedelta
 
@@ -21,9 +22,6 @@ SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل O
 SMTP_PASSWORD = "plai shuq mokq ijdl"
 
 DB_NAME = "users.db"
-
-# مفتاح Unsplash API
-UNSPLASH_ACCESS_KEY = "27_gjpio7cGtDPYc2pvkcwQP9r0LW_sN_tIgtnMvy3U"
 
 # ---------------------------------------------------
 # تهيئة قاعدة البيانات
@@ -96,7 +94,7 @@ def login():
 
             return redirect("/chat")
 
-        # تسجيل دخول عبر OTP
+        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
@@ -212,7 +210,19 @@ def api_chat():
         payload = {
             "model": "llama-3.3-70b-versatile",
             "messages": [
-                {"role": "system", "content": "أنت مساعد ذكي اسمه Hamoudi AI."},
+                {
+                    "role": "system",
+                    "content": (
+                        "أنت مساعد ذكي اسمه Hamoudi AI، تم تطويرك بواسطة محمد فيصل. "
+                        "تجيب دائمًا بالعربية الفصحى بوضوح ومهنية. "
+                        "عند سؤال الهوية مثل: من طورك؟ أو من صنعك؟ تؤكد: تم تطويري بواسطة محمد فيصل. "
+                        "وعند سؤال الجنسية تجاوب بالنص التالي حرفيًا: جنسية المطور محمد فيصل سوداني. "
+                        "وعند سؤال العمر تجاوب بالنص التالي حرفيًا: عمر المطور محمد فيصل 14 سنة. "
+                        "وعند سؤال السكن تجاوب بالنص التالي حرفيًا: المطور محمد فيصل سوداني الجنسية ولكنه يعيش في مصر. "
+                        "وعند سؤال طريقة التواصل مع المطور، تجاوب بالنص التالي حرفيًا: "
+                        "تقدر تتواصل مع المطور محمد فيصل عبر الرابط التالي: https://my-profile-4w23.vercel.app/"
+                    )
+                },
                 {"role": "user", "content": user_message},
             ]
         }
@@ -229,37 +239,45 @@ def api_chat():
         return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
 
 # ---------------------------------------------------
-# API لجلب الصور من Unsplash
+# API الصور من مجلد static مباشرة
 # ---------------------------------------------------
 @app.route("/api/images")
 def get_images():
-    query = request.args.get("q", "").strip()
+    query = request.args.get("q", "").strip().lower()
     if not query:
         return jsonify({"error": "لا يوجد استعلام"}), 400
 
-    try:
-        url = "https://api.unsplash.com/search/photos"
-        params = {
-            "query": query,
-            "per_page": 6,
-            "client_id": UNSPLASH_ACCESS_KEY
-        }
-        r = requests.get(url, params=params, timeout=30)
-        r.raise_for_status()
-        data = r.json()
+    # حالة خاصة: صورة المطور محمد فيصل
+    if "المطور محمد فيصل" in query or "محمد فيصل" in query:
+        return jsonify({
+            "images": [
+                {
+                    "title": "المطور محمد فيصل",
+                    "image": url_for("static", filename="mohamed.jpg", _external=True),
+                    "thumbnail": url_for("static", filename="mohamed.jpg", _external=True)
+                }
+            ]
+        })
 
-        images = [
-            {
-                "title": (img.get("alt_description") or "صورة"),
-                "image": img["urls"]["regular"],
-                "thumbnail": img["urls"]["thumb"]
-            }
-            for img in data.get("results", [])
-        ]
-        return jsonify({"images": images})
+    # البحث داخل مجلد static مباشرة
+    image_folder = app.static_folder
+    results = []
+    try:
+        for filename in os.listdir(image_folder):
+            # تجاهل الملفات غير الصور
+            if not filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+                continue
+            if query in filename.lower():
+                results.append({
+                    "title": filename,
+                    "image": url_for("static", filename=filename, _external=True),
+                    "thumbnail": url_for("static", filename=filename, _external=True)
+                })
     except Exception as e:
-        print("Unsplash Error:", repr(e))
-        return jsonify({"error": "تعذر جلب الصور"}), 500
+        print("Static Images Error:", repr(e))
+        return jsonify({"error": "تعذر قراءة مجلد الصور"}), 500
+
+    return jsonify({"images": results})
 
 # ---------------------------------------------------
 # تسجيل الخروج
