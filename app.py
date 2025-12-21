@@ -2,9 +2,8 @@ import sqlite3
 import smtplib
 import random
 import hashlib
-import os
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, redirect, session, jsonify, url_for
+from flask import Flask, render_template, request, redirect, session, jsonify
 import requests
 from datetime import timedelta
 
@@ -18,7 +17,7 @@ app.permanent_session_lifetime = timedelta(days=7)
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
 GROQ_API_KEY = "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"
-SMTP_EMAIL = "hamoudi4app@gmail.com"
+SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
 SMTP_PASSWORD = "plai shuq mokq ijdl"
 
 DB_NAME = "users.db"
@@ -62,13 +61,14 @@ def send_otp_email(to_email: str, otp_code: str):
         server.send_message(msg)
 
 # ---------------------------------------------------
-# صفحة تسجيل الدخول
+# تسجيل الدخول
 # ---------------------------------------------------
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         login_type = request.form.get("login_type", "password")
 
+        # تسجيل دخول بكلمة مرور
         if login_type == "password":
             email = request.form.get("email", "").strip().lower()
             password = request.form.get("password", "")
@@ -93,6 +93,7 @@ def login():
 
             return redirect("/chat")
 
+        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
@@ -139,13 +140,13 @@ def login():
 @app.route("/verify")
 def verify():
     if "pending_email" not in session:
-        return redirect("/login")
+        return redirect("/")
     return render_template("verify.html", email=session.get("pending_email"))
 
 @app.route("/verify_otp", methods=["POST"])
 def verify_otp():
     if "pending_email" not in session:
-        return redirect("/login")
+        return redirect("/")
 
     user_input = request.form.get("otp", "")
     real_otp = session.get("pending_otp")
@@ -171,7 +172,7 @@ def verify_otp():
 @app.route("/chat")
 def chat():
     if "user_id" not in session:
-        return redirect("/login")
+        return redirect("/")
 
     email = (session.get("email") or "").lower().encode("utf-8")
     email_hash = hashlib.md5(email).hexdigest()
@@ -185,17 +186,68 @@ def chat():
     )
 
 # ---------------------------------------------------
+# API الشات (Groq)
+# ---------------------------------------------------
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    if "user_id" not in session:
+        return jsonify({"error": "غير مصرح"}), 401
+
+    user_message = (request.json.get("message") or "").strip()
+    if not user_message:
+        return jsonify({"error": "الرسالة فارغة"}), 400
+
+    if not GROQ_API_KEY:
+        return jsonify({"error": "API Key غير موجود"}), 500
+
+    try:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "أنت مساعد ذكي اسمه Hamoudi AI، تم تطويرك بواسطة محمد فيصل. "
+                        "تجيب دائمًا بالعربية الفصحى بوضوح ومهنية. "
+                        "عند سؤال الهوية مثل: من طورك؟ أو من صنعك؟ تؤكد: تم تطويري بواسطة محمد فيصل. "
+                        "وعند سؤال الجنسية تجاوب بالنص التالي حرفيًا: جنسية المطور محمد فيصل سوداني. "
+                        "وعند سؤال العمر تجاوب بالنص التالي حرفيًا: عمر المطور محمد فيصل 14 سنة. "
+                        "وعند سؤال السكن تجاوب بالنص التالي حرفيًا: المطور محمد فيصل سوداني الجنسية ولكنه يعيش في مصر. "
+                        "وعند سؤال طريقة التواصل مع المطور، تجاوب بالنص التالي حرفيًا: "
+                        "تقدر تتواصل مع المطور محمد فيصل عبر الرابط التالي: https://my-profile-4w23.vercel.app/"
+                    )
+                },
+                {"role": "user", "content": user_message},
+            ]
+        }
+
+        r = requests.post(url, headers=headers, json=payload, timeout=60)
+        r.raise_for_status()
+
+        j = r.json()
+        reply = j["choices"][0]["message"]["content"]
+        return jsonify({"reply": reply})
+
+    except Exception as e:
+        print("Chat Error:", repr(e))
+        return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
+
+# ---------------------------------------------------
 # تسجيل الخروج
 # ---------------------------------------------------
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/login")
+    return redirect("/")
 
 # ---------------------------------------------------
 # تشغيل السيرفر
 # ---------------------------------------------------
 if __name__ == "__main__":
-    if not os.path.isdir(app.static_folder):
-        os.makedirs(app.static_folder, exist_ok=True)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
+    
