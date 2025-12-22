@@ -183,13 +183,19 @@ def chat():
     )
 
 # ---------------------------------------------------
-# API الشات (Groq) مع الـ system prompt الكامل
+# API الشات (مع شرط الصورة + system prompt كامل)
 # ---------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     user_message = (request.json.get("message") or "").strip()
     if not user_message:
         return jsonify({"error": "الرسالة فارغة"}), 400
+
+    # شرط خاص لعرض صورة المطور محمد فيصل
+    if "صورة المطور محمد فيصل" in user_message or "هات صورة المطور محمد فيصل" in user_message:
+        return jsonify({
+            "reply": "<img src='/static/1000010259-pica.png' alt='صورة المطور محمد فيصل' style='max-width:200px;'>"
+        })
 
     if not GROQ_API_KEY:
         return jsonify({"error": "API Key غير موجود"}), 500
