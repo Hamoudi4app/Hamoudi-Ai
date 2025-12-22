@@ -65,7 +65,7 @@ def send_otp_email(to_email: str, otp_code: str):
 # ---------------------------------------------------
 @app.route("/login")
 def login():
-    return render_template("login.html")
+    return render_templates("login.html")
 # ---------------------------------------------------
 # صفحة التحقق من OTP
 # ---------------------------------------------------
@@ -110,7 +110,7 @@ def chat():
     email_hash = hashlib.md5(email).hexdigest()
     profile_image = f"https://www.gravatar.com/avatar/{email_hash}?d=identicon"
 
-    return render_template(
+    return render_templates(
         "index.html",
         username=session.get("username"),
         email=session.get("email"),
