@@ -406,5 +406,18 @@ document.getElementById("toggle-theme").addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
 });
 
+// زر واحد يتغير بين 🎤 و ➤
+const inputField = document.getElementById("input");
+const actionBtn = document.getElementById("send-btn"); // تأكد أن زر الإرسال عندك id="send-btn"
+
+// راقب الكتابة داخل خانة الإدخال
+inputField.addEventListener("input", () => {
+  if (inputField.value.trim().length > 0) {
+    actionBtn.textContent = "➤"; // زر إرسال
+  } else {
+    actionBtn.textContent = "🎤"; // زر تسجيل صوتي
+  }
+});
+
 // تحميل عند فتح الصفحة
 window.onload = loadChat;
