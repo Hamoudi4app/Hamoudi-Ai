@@ -183,19 +183,13 @@ def chat():
     )
 
 # ---------------------------------------------------
-# API الشات (مع شرط الصورة + system prompt كامل)
+# API الشات (مع system prompt كامل)
 # ---------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     user_message = (request.json.get("message") or "").strip()
     if not user_message:
         return jsonify({"error": "الرسالة فارغة"}), 400
-
-    # شرط خاص لعرض صورة المطور محمد فيصل
-    if "صورة المطور محمد فيصل" in user_message or "هات صورة المطور محمد فيصل" in user_message:
-        return jsonify({
-            "reply": "<img src='/static/1000010259-pica.png' alt='صورة المطور محمد فيصل' style='max-width:200px;'>"
-        })
 
     if not GROQ_API_KEY:
         return jsonify({"error": "API Key غير موجود"}), 500
@@ -237,6 +231,24 @@ def api_chat():
     except Exception as e:
         print("Chat Error:", repr(e))
         return jsonify({"error": "حدث خطأ أثناء الاتصال بـ Hamoudi AI."}), 500
+
+# ---------------------------------------------------
+# API خاص بالصور
+# ---------------------------------------------------
+@app.route("/api/images")
+def api_images():
+    q = request.args.get("q", "").strip()
+
+    # لو المستخدم طلب صورة المطور محمد فيصل
+    if "محمد فيصل" in q or "المطور محمد فيصل" in q:
+        return jsonify({
+            "images": ["/static/1000010259-pica.png"]
+        })
+
+    # أي استعلام تاني (لسه ما عملناش بحث خارجي)
+    return jsonify({
+        "images": []
+    })
 
 # ---------------------------------------------------
 # تسجيل الخروج
