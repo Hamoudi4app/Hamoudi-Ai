@@ -268,11 +268,18 @@ logoutBtn.addEventListener("click", () => {
     }
 
     // تحميل المحادثة واسم المستخدم
-    function loadChat() {
-      const history = localStorage.getItem("chatHistory");
-      if (history) chatBox.innerHTML = history;
-      const name = localStorage.getItem("username") || "زائر";
-      document.getElementById("sidebar-username").textContent = name;
+function loadChat() {
+  const history = localStorage.getItem("chatHistory");
+  if (history) {
+    chatBox.innerHTML = history;
+  } else {
+    // أول مرة يدخل المستخدم → رسالة ترحيب
+    const name = localStorage.getItem("username") || "زائر";
+    addMessage(`مرحبا ${name}، كيف يمكنني مساعدتك؟`, "ai");
+  }
+
+  const name = localStorage.getItem("username") || "زائر";
+  document.getElementById("sidebar-username").textContent = name;
     }
 
     // حفظ المحادثة
