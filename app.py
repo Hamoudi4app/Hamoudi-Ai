@@ -201,7 +201,7 @@ def api_chat():
             "Content-Type": "application/json",
         }
         payload = {
-            "model": "llama-3.3-70b-versatile",
+            "model": "llama-3.1-8b-instant",
             "messages": [
                 {"role": "system", "content": "أنت مساعد ذكي اسمه Hamoudi AI."},
                 {"role": "user", "content": user_message},
