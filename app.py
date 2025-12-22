@@ -17,7 +17,7 @@ app.permanent_session_lifetime = timedelta(days=7)
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
 GROQ_API_KEY = "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"
-SMTP_EMAIL = "hamoudi4app@gmail.com"      # بريد Gmail الذي سيرسل OTP
+SMTP_EMAIL = "hamoudi4app@gmail.com"
 SMTP_PASSWORD = "plai shuq mokq ijdl"
 
 DB_NAME = "users.db"
@@ -68,7 +68,6 @@ def login():
     if request.method == "POST":
         login_type = request.form.get("login_type", "password")
 
-        # تسجيل دخول بكلمة مرور
         if login_type == "password":
             email = request.form.get("email", "").strip().lower()
             password = request.form.get("password", "")
@@ -93,7 +92,6 @@ def login():
 
             return redirect("/chat")
 
-        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
         elif login_type == "otp":
             email = request.form.get("email_otp", "").strip().lower()
 
@@ -167,21 +165,21 @@ def verify_otp():
     return redirect("/chat")
 
 # ---------------------------------------------------
-# صفحة الشات
+# صفحة الشات (معدلة لتفتح مباشرة)
 # ---------------------------------------------------
 @app.route("/chat")
 def chat():
-    if "user_id" not in session:
-        return redirect("/")
+    # لو فيه جلسة نستخدم بياناتها، لو مفيش نعرض الشات باسم زائر
+    username = session.get("username") or "زائر"
+    email = session.get("email") or "guest@example.com"
 
-    email = (session.get("email") or "").lower().encode("utf-8")
-    email_hash = hashlib.md5(email).hexdigest()
+    email_hash = hashlib.md5(email.lower().encode("utf-8")).hexdigest()
     profile_image = f"https://www.gravatar.com/avatar/{email_hash}?d=identicon"
 
     return render_template(
         "index.html",
-        username=session.get("username"),
-        email=session.get("email"),
+        username=username,
+        email=email,
         profile_image=profile_image
     )
 
@@ -190,9 +188,6 @@ def chat():
 # ---------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
-    if "user_id" not in session:
-        return jsonify({"error": "غير مصرح"}), 401
-
     user_message = (request.json.get("message") or "").strip()
     if not user_message:
         return jsonify({"error": "الرسالة فارغة"}), 400
@@ -243,11 +238,10 @@ def api_chat():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect("/login")
 
 # ---------------------------------------------------
 # تشغيل السيرفر
 # ---------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
-    
