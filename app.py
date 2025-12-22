@@ -63,77 +63,9 @@ def send_otp_email(to_email: str, otp_code: str):
 # ---------------------------------------------------
 # تسجيل الدخول
 # ---------------------------------------------------
-@app.route("/", methods=["GET", "POST"])
+@app.route("/login")
 def login():
-    if request.method == "POST":
-        login_type = request.form.get("login_type", "password")
-
-        # تسجيل دخول بكلمة مرور
-        if login_type == "password":
-            email = request.form.get("email", "").strip().lower()
-            password = request.form.get("password", "")
-
-            conn = sqlite3.connect(DB_NAME)
-            c = conn.cursor()
-            c.execute("SELECT id, username, email, password_hash FROM users WHERE email = ?", (email,))
-            user = c.fetchone()
-            conn.close()
-
-            if not user:
-                return render_template("login.html", error="لا يوجد حساب بهذا البريد.")
-
-            user_id, username, email_db, password_hash_db = user
-            if hash_password(password) != password_hash_db:
-                return render_template("login.html", error="كلمة المرور غير صحيحة.")
-
-            session["user_id"] = user_id
-            session["username"] = username
-            session["email"] = email_db
-            session.permanent = True
-
-            return redirect("/chat")
-
-        # تسجيل دخول عبر OTP (مفتوح لأي بريد)
-        elif login_type == "otp":
-            email = request.form.get("email_otp", "").strip().lower()
-
-            conn = sqlite3.connect(DB_NAME)
-            c = conn.cursor()
-            c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
-            user = c.fetchone()
-
-            if not user:
-                username = email.split("@")[0]
-                c.execute(
-                    "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-                    (username, email, hash_password("temp"))
-                )
-                conn.commit()
-                c.execute("SELECT id, username FROM users WHERE email = ?", (email,))
-                user = c.fetchone()
-
-            user_id, username = user
-            conn.close()
-
-            otp_code = str(random.randint(100000, 999999))
-            session["pending_otp"] = otp_code
-            session["pending_email"] = email
-            session["pending_user_id"] = user_id
-            session["pending_username"] = username
-
-            try:
-                send_otp_email(email, otp_code)
-            except Exception as e:
-                print("OTP Error:", repr(e))
-                return render_template("login.html", error="تعذر إرسال رمز التحقق.")
-
-            return redirect("/verify")
-
-    if session.get("user_id"):
-        return redirect("/chat")
-
     return render_template("login.html")
-
 # ---------------------------------------------------
 # صفحة التحقق من OTP
 # ---------------------------------------------------
