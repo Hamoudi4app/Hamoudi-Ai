@@ -267,7 +267,7 @@ logoutBtn.addEventListener("click", () => {
       return text.replace(urlRegex, url => '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>');
     }
 
-    // تحميل المحادثة واسم المستخدم
+// تحميل المحادثة واسم المستخدم
 function loadChat() {
   const history = localStorage.getItem("chatHistory");
   if (history) {
@@ -280,134 +280,131 @@ function loadChat() {
 
   const name = localStorage.getItem("username") || "زائر";
   document.getElementById("sidebar-username").textContent = name;
-    }
+}
 
-    // حفظ المحادثة
-    function saveChat() {
-      localStorage.setItem("chatHistory", chatBox.innerHTML);
-    }
+// حفظ المحادثة
+function saveChat() {
+  localStorage.setItem("chatHistory", chatBox.innerHTML);
+}
 
-    // إضافة رسالة
-    function addMessage(text, sender = "ai") {
-      const div = document.createElement("div");
-      div.className = "message " + sender;
+// إضافة رسالة
+function addMessage(text, sender = "ai") {
+  const div = document.createElement("div");
+  div.className = "message " + sender;
 
-      const avatar = document.createElement("span");
-      avatar.className = "avatar";
-      avatar.textContent = sender === "user" ? "👤" : "🤖";
+  const avatar = document.createElement("span");
+  avatar.className = "avatar";
+  avatar.textContent = sender === "user" ? "👤" : "🤖";
 
-      const content = document.createElement("span");
-      content.innerHTML = linkify(text);
+  const content = document.createElement("span");
+  content.innerHTML = linkify(text);
 
-      div.appendChild(avatar);
-      div.appendChild(content);
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      saveChat();
-    }
+  div.appendChild(avatar);
+  div.appendChild(content);
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  saveChat();
+}
 
-    // إضافة صور داخل الرسائل
-    function addImages(images, titleText = "صور") {
-      const div = document.createElement("div");
-      div.className = "message ai";
+// إضافة صور داخل الرسائل
+function addImages(images, titleText = "صور") {
+  const div = document.createElement("div");
+  div.className = "message ai";
 
-      const avatar = document.createElement("span");
-      avatar.className = "avatar";
-      avatar.textContent = "🤖";
-      div.appendChild(avatar);
+  const avatar = document.createElement("span");
+  avatar.className = "avatar";
+  avatar.textContent = "🤖";
+  div.appendChild(avatar);
 
-      const title = document.createElement("div");
-      title.textContent = titleText;
-      div.appendChild(title);
+  const title = document.createElement("div");
+  title.textContent = titleText;
+  div.appendChild(title);
 
-      const imgContainer = document.createElement("div");
-      imgContainer.className = "images";
+  const imgContainer = document.createElement("div");
+  imgContainer.className = "images";
 
-      images.forEach(img => {
-        const link = document.createElement("a");
-        link.href = img.image;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
+  images.forEach(img => {
+    const link = document.createElement("a");
+    link.href = img.image;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
 
-        const image = document.createElement("img");
-        image.src = img.image;
-        image.alt = img.title || "صورة";
+    const image = document.createElement("img");
+    image.src = img.image;
+    image.alt = img.title || "صورة";
 
-        link.appendChild(image);
-        imgContainer.appendChild(link);
-      });
+    link.appendChild(image);
+    imgContainer.appendChild(link);
+  });
 
-      div.appendChild(imgContainer);
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      saveChat();
-    }
+  div.appendChild(imgContainer);
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  saveChat();
+}
 
-    // إرسال رسالة
-    async function sendMessage() {
-      const input = document.getElementById("input");
-      const text = input.value.trim();
-      if (!text) return;
+// إرسال رسالة
+async function sendMessage() {
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if (!text) return;
 
-      addMessage(text, "user");
-      input.value = "";
+  addMessage(text, "user");
+  input.value = "";
 
-      // تحديد طلب الصور
-      const isImageQuery =
-        text.startsWith("هات صور") ||
-        text.startsWith("صورة") ||
-        text.includes("صور عن") ||
-        text.includes("اعرض صور") ||
-        text.includes("صور لـ") ||
-        text.includes("صور ل ") ||
-        text.includes("المطور محمد فيصل");
+  // تحديد طلب الصور
+  const isImageQuery =
+    text.startsWith("هات صور") ||
+    text.startsWith("صورة") ||
+    text.includes("صور عن") ||
+    text.includes("اعرض صور") ||
+    text.includes("صور لـ") ||
+    text.includes("صور ل ") ||
+    text.includes("المطور محمد فيصل");
 
-      if (isImageQuery) {
-        const q = text
-          .replace(/^هات صور\s*/, "")
-          .replace(/^صورة\s*/, "")
-          .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
-          .trim() || text;
+  if (isImageQuery) {
+    const q = text
+      .replace(/^هات صور\s*/, "")
+      .replace(/^صورة\s*/, "")
+      .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
+      .trim() || text;
 
-        try {
-          const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
-          const data = await resp.json();
-          if (data.images && data.images.length > 0) {
-            addImages(data.images, `صور عن ${q}`);
-          } else {
-            addMessage("لم أجد صور مناسبة.", "ai");
-          }
-        } catch (err) {
-          addMessage("حدث خطأ أثناء جلب الصور.", "ai");
-        }
-        return;
+    try {
+      const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
+      const data = await resp.json();
+      if (data.images && data.images.length > 0) {
+        addImages(data.images, `صور عن ${q}`);
+      } else {
+        addMessage("لم أجد صور مناسبة.", "ai");
       }
-
-      // الرد النصي من /api/chat
-      try {
-        const resp = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text })
-        });
-        const data = await resp.json();
-        if (data.reply) {
-          addMessage(data.reply, "ai");
-        } else {
-          addMessage(data.error || "خطأ غير معروف", "ai");
-        }
-      } catch (err) {
-        addMessage("تعذر الاتصال بالخادم.", "ai");
-      }
+    } catch (err) {
+      addMessage("حدث خطأ أثناء جلب الصور.", "ai");
     }
+    return;
+  }
 
-    // تبديل الثيم
-    document.getElementById("toggle-theme").addEventListener("click", () => {
-      document.body.classList.toggle("dark-mode");
+  // الرد النصي من /api/chat
+  try {
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
     });
+    const data = await resp.json();
+    if (data.reply) {
+      addMessage(data.reply, "ai");
+    } else {
+      addMessage(data.error || "خطأ غير معروف", "ai");
+    }
+  } catch (err) {
+    addMessage("تعذر الاتصال بالخادم.", "ai");
+  }
+}
 
-    // تحميل عند فتح الصفحة
-    window.onload = loadChat;
-  </script>
-</body>
-  </html>
+// تبديل الثيم
+document.getElementById("toggle-theme").addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+});
+
+// تحميل عند فتح الصفحة
+window.onload = loadChat;
