@@ -3,7 +3,7 @@ import smtplib
 import random
 import hashlib
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_templates, request, redirect, session, jsonify
 import requests
 from datetime import timedelta
 
