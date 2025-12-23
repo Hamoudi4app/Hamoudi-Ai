@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Hamoudi Ai</title>
+
+  <!-- أيقونة التبويب (favicon) من مجلد static -->
+  <link rel="icon" type="image/png" href="static/favicon.png" />
+
   <style>
     :root {
       --primary: #007bff;
@@ -58,7 +62,6 @@
       right: env(safe-area-inset-right, 10px);
       z-index: 10;
     }
-
     #toggle-theme {
       width: 45px;
       height: 45px;
@@ -126,6 +129,7 @@
     .message a {
       color: #0645ad;
       text-decoration: underline;
+      word-break: break-all;
     }
     .dark-mode .message a {
       color: #4da3ff;
@@ -218,7 +222,7 @@
     const toggleBtn = document.getElementById("toggle-theme");
     const usernameEl = document.getElementById("sidebar-username");
 
-    // دوال مساعدة: تأمين HTML ثم تفعيل الروابط
+    // تأمين HTML لمنع XSS
     function escapeHTML(str) {
       return str
         .replace(/&/g, "&amp;")
@@ -228,19 +232,19 @@
         .replace(/'/g, "&#039;");
     }
 
+    // تحويل الروابط إلى عناصر قابلة للضغط
     function linkify(text) {
-      // بعد التأمين، فعّل الروابط عبر regex
       return text.replace(
         /(https?:\/\/[^\s]+)/g,
         '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
       );
     }
 
+    // إضافة رسالة
     function addMessage(text, sender = "ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
 
-      // أمن النص ثم فعّل الروابط
       const safe = escapeHTML(text);
       const linked = linkify(safe);
 
@@ -250,10 +254,10 @@
       saveChat();
     }
 
+    // حفظ واسترجاع المحادثة
     function saveChat() {
       localStorage.setItem("chatHistory", chatBox.innerHTML);
     }
-
     function loadChat() {
       const history = localStorage.getItem("chatHistory");
       const name = localStorage.getItem("username") || "زائر";
@@ -266,6 +270,7 @@
       }
     }
 
+    // إرسال رسالة
     async function sendMessage() {
       const text = inputField.value.trim();
       if (!text) return;
@@ -291,6 +296,7 @@
       }
     }
 
+    // إدخال صوتي
     function startVoiceRecognition() {
       if ("webkitSpeechRecognition" in window) {
         const recognition = new webkitSpeechRecognition();
@@ -329,7 +335,7 @@
       }
     });
 
-    // تبديل الثيم مع أنيميشن ودعم الاستمرارية
+    // تبديل الثيم مع أنيميشن وحفظ التفضيل
     toggleBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
       const isDark = document.body.classList.contains("dark-mode");
@@ -338,7 +344,6 @@
       toggleBtn.style.transform = "rotate(360deg)";
       setTimeout(() => { toggleBtn.style.transform = "rotate(0deg)"; }, 400);
 
-      // حفظ تفضيل الثيم
       localStorage.setItem("prefersDark", isDark ? "1" : "0");
     });
 
@@ -356,7 +361,7 @@
     // تحميل المحادثة
     window.addEventListener("load", loadChat);
 
-    // معالجة ظهور لوحة المفاتيح على الهواتف لتجنب تغطية المحتوى
+    // الحفاظ على التمرير أسفل عند تغيّر الحجم (لوحة مفاتيح الهاتف)
     window.addEventListener("resize", () => {
       chatBox.scrollTop = chatBox.scrollHeight;
     });
