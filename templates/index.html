@@ -36,7 +36,7 @@
     }
 
     #toggle-theme:active {
-      transform: scale(0.9) rotate(20deg); /* مؤثر عند الضغط */
+      transform: scale(0.9) rotate(20deg);
     }
 
     .dark-mode #toggle-theme {
@@ -50,7 +50,7 @@
       background: #007bff;
       color: #fff;
       text-align: center;
-      font-size: 5vw;
+      font-size: 20px;
     }
 
     #chat-box {
@@ -59,7 +59,6 @@
       border: 1px solid #ccc;
       padding: 3vw;
       background: #fff;
-      font-size: 4vw;
       display: flex;
       flex-direction: column;
     }
@@ -67,28 +66,28 @@
     /* فقاعات الرسائل */
     .message {
       max-width: 75%;
-      padding: 12px 16px;
+      padding: 14px 18px;
       border-radius: 20px;
       margin: 10px 0;
-      font-size: 16px;
-      line-height: 1.4;
+      font-size: 18px;   /* خط كبير وواضح */
+      line-height: 1.5;
       word-wrap: break-word;
     }
 
     .message.ai {
-      background: #e5e5ea; /* رمادي فاتح */
+      background: #e5e5ea;
       color: #000;
       align-self: flex-start;
     }
 
     .message.user {
-      background: #007bff; /* أزرق */
+      background: #007bff;
       color: #fff;
       align-self: flex-end;
     }
 
     .avatar {
-      display: none; /* نخفي الأيقونات لأن الفقاعات تكفي */
+      display: none;
     }
 
     #input-area {
@@ -101,7 +100,7 @@
     #input {
       flex: 1;
       padding: 2vh;
-      font-size: 4vw;
+      font-size: 18px;
       border: 1px solid #ccc;
       border-radius: 25px;
       outline: none;
@@ -109,9 +108,9 @@
 
     #send-btn {
       margin-left: 2vw;
-      width: 12vw;
-      height: 12vw;
-      font-size: 6vw;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
       border: none;
       background: #007bff;
       color: #fff;
@@ -151,13 +150,23 @@
     }
 
     .dark-mode .message.ai {
-      background: #444; /* رمادي داكن */
+      background: #444;
       color: #fff;
     }
 
     .dark-mode .message.user {
-      background: #0056b3; /* أزرق داكن */
+      background: #0056b3;
       color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      .message {
+        font-size: 20px; /* أكبر على الهاتف */
+        padding: 16px 20px;
+      }
+      #input {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
@@ -281,9 +290,9 @@
       }, 400);
 
       if (document.body.classList.contains("dark-mode")) {
-        toggleBtn.textContent = "☀️"; // أيقونة الشمس للوضع الداكن
+        toggleBtn.textContent = "☀️";
       } else {
-        toggleBtn.textContent = "🌙"; // أيقونة القمر للوضع الفاتح
+        toggleBtn.textContent = "🌙";
       }
     });
 
