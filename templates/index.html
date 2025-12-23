@@ -99,7 +99,7 @@
       background: var(--bg-card);
       display: flex;
       flex-direction: column;
-      padding-bottom: calc(var(--send-size) + 32px);
+      padding-bottom: calc(var(--send-size) + 32px); /* مساحة لأسفل لمنع التغطية */
       scroll-behavior: smooth;
     }
 
@@ -198,28 +198,6 @@
     }
     .dark-mode .message.ai { background: #444; color: #fff; }
     .dark-mode .message.user { background: #0056b3; color: #fff; }
-
-    /* QR Popup */
-    #qr-popup {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      background: #fff;
-      padding: 8px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 999;
-      opacity: 0;
-      transition: all 0.6s ease;
-    }
-    #qr-popup.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    #qr-popup h3 {
-      margin: 0 0 6px;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
@@ -229,6 +207,7 @@
   </div>
 
   <div id="sidebar-username"></div>
+
   <div id="chat-box" aria-live="polite" aria-atomic="false"></div>
 
   <div id="input-area">
@@ -236,36 +215,164 @@
     <button id="send-btn" aria-label="Send">🎤</button>
   </div>
 
-  <!-- QR Popup -->
-  <div id="qr-popup">
-    <h3>ثبّت التطبيق على شاشتك الرئيسية</h3>
-    <div id="qrcode"></div>
-  </div>
-
-  <!-- مكتبة QRCode.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
   <script>
-    // توليد رمز QR صغير
-    new QRCode(document.getElementById("qrcode"), {
-      text: window.location.href,
-      width: 100,
-      height: 100,
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
+    const chatBox = document.getElementById("chat-box");
+    const inputField = document.getElementById("input");
+    const actionBtn = document.getElementById("send-btn");
+    const toggleBtn = document.getElementById("toggle-theme");
+    const usernameEl = document.getElementById("sidebar-username");
+
+    // تأمين HTML لمنع XSS
+    function escapeHTML(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // تحويل الروابط إلى عناصر قابلة للضغط
+    function linkify(text) {
+      return text.replace(
+        /(https?:\/\/[^\s]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+    }
+
+    // إضافة رسالة
+    function addMessage(text, sender = "ai") {
+      const div = document.createElement("div");
+      div.className = "message " + sender;
+
+      const safe = escapeHTML(text);
+      const linked = linkify(safe);
+
+      div.innerHTML = linked;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      saveChat();
+    }
+
+    // حفظ واسترجاع المحادثة
+    function saveChat() {
+      localStorage.setItem("chatHistory", chatBox.innerHTML);
+    }
+    function loadChat() {
+      const history = localStorage.getItem("chatHistory");
+      const name = localStorage.getItem("username") || "زائر";
+      usernameEl.textContent = name;
+
+      if (history) {
+        chatBox.innerHTML = history;
+      } else {
+        addMessage(`مرحبًا ${name}، كيف يمكنني مساعدتك؟`, "ai");
+      }
+    }
+
+    // إرسال رسالة
+    async function sendMessage() {
+      const text = inputField.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      inputField.value = "";
+      actionBtn.textContent = "🎤";
+
+      try {
+        const resp = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await resp.json();
+        if (data.reply) {
+          addMessage(data.reply, "ai");
+        } else {
+          addMessage(data.error || "حدث خطأ غير معروف.", "ai");
+        }
+      } catch (err) {
+        addMessage("تعذر الاتصال بالخادم.", "ai");
+      }
+    }
+
+    // إدخال صوتي
+    function startVoiceRecognition() {
+      if ("webkitSpeechRecognition" in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = "ar-SA";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          inputField.value = transcript;
+          sendMessage();
+        };
+
+        recognition.onerror = function() {
+          addMessage("تعذر التعرف على الصوت.", "ai");
+        };
+
+        recognition.start();
+        addMessage("🎤 جاري الاستماع...", "ai");
+      } else {
+        addMessage("المتصفح لا يدعم الإدخال الصوتي.", "ai");
+      }
+    }
+
+    // تبديل محتوى زر الإرسال بين مايك وسهم
+    inputField.addEventListener("input", () => {
+      actionBtn.textContent = inputField.value.trim().length > 0 ? "➤" : "🎤";
     });
 
-    // إظهار مع أنيميشن
-    const qrPopup = document.getElementById("qr-popup");
-    setTimeout(() => {
-      qrPopup.classList.add("show");
-    }, 500);
+    // إرسال أو بدء الصوت
+    actionBtn.addEventListener("click", () => {
+      if (inputField.value.trim().length > 0) {
+        sendMessage();
+      } else {
+        startVoiceRecognition();
+      }
+    });
 
-    // إخفاء بعد 7 ثواني
-    setTimeout(() => {
-      qrPopup.classList.remove("show");
-    }, 7500);
+    // تبديل الثيم مع أنيميشن وحفظ التفضيل
+    toggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+      toggleBtn.textContent = isDark ? "☀️" : "🌙";
+
+      toggleBtn.style.transform = "rotate(360deg)";
+      setTimeout(() => { toggleBtn.style.transform = "rotate(0deg)"; }, 400);
+
+      localStorage.setItem("prefersDark", isDark ? "1" : "0");
+    });
+
+    // تطبيق تفضيل الثيم المخزن
+    (function applySavedTheme() {
+      const prefersDark = localStorage.getItem("prefersDark") === "1";
+      if (prefersDark) {
+        document.body.classList.add("dark-mode");
+        toggleBtn.textContent = "☀️";
+      } else {
+        toggleBtn.textContent = "🌙";
+      }
+    })();
+
+    // تحميل المحادثة
+    window.addEventListener("load", loadChat);
+
+    // الحفاظ على التمرير أسفل عند تغيّر الحجم (لوحة مفاتيح الهاتف)
+    window.addEventListener("resize", () => {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // إرسال بالإنتر
+    inputField.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
   </script>
 </body>
 </html>
