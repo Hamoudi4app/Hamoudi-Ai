@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Chat App</title>
+  <title>Hamoudi Ai</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,13 +20,13 @@
     }
 
     #toggle-theme {
-      width: 80px;   /* أكبر */
+      width: 80px;
       height: 80px;
       border: none;
       border-radius: 50%;
       background: #007bff;
       color: #fff;
-      font-size: 32px; /* أيقونة أكبر */
+      font-size: 32px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -45,7 +45,7 @@
     }
 
     #sidebar-username {
-      padding: 4vh;
+      padding: 15px;
       font-weight: bold;
       background: #007bff;
       color: #fff;
@@ -54,10 +54,10 @@
     }
 
     #chat-box {
-      height: 65vh;
+      height: calc(100vh - 160px); /* يملأ الشاشة مع ترك مساحة للمدخل */
       overflow-y: auto;
       border: 1px solid #ccc;
-      padding: 3vw;
+      padding: 15px;
       background: #fff;
       display: flex;
       flex-direction: column;
@@ -69,7 +69,7 @@
       padding: 14px 18px;
       border-radius: 20px;
       margin: 10px 0;
-      font-size: 18px;   /* خط كبير وواضح */
+      font-size: 18px;
       line-height: 1.5;
       word-wrap: break-word;
     }
@@ -90,16 +90,21 @@
       display: none;
     }
 
+    /* خانة الإدخال مثبتة أسفل الشاشة */
     #input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
       display: flex;
-      padding: 2vh;
+      padding: 12px;
       background: #fff;
       border-top: 1px solid #ccc;
     }
 
     #input {
       flex: 1;
-      padding: 2vh;
+      padding: 16px;
       font-size: 18px;
       border: 1px solid #ccc;
       border-radius: 25px;
@@ -107,10 +112,10 @@
     }
 
     #send-btn {
-      margin-left: 2vw;
-      width: 60px;
-      height: 60px;
-      font-size: 24px;
+      margin-left: 12px;
+      width: 65px;
+      height: 65px;
+      font-size: 28px;
       border: none;
       background: #007bff;
       color: #fff;
@@ -159,13 +164,19 @@
       color: #fff;
     }
 
+    /* تحسين للهاتف */
     @media (max-width: 600px) {
       .message {
-        font-size: 20px; /* أكبر على الهاتف */
+        font-size: 20px;
         padding: 16px 20px;
       }
       #input {
         font-size: 20px;
+      }
+      #send-btn {
+        width: 70px;
+        height: 70px;
+        font-size: 30px;
       }
     }
   </style>
@@ -283,7 +294,6 @@
     toggleBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
 
-      // مؤثر دوران عند التغيير
       toggleBtn.style.transform = "rotate(360deg)";
       setTimeout(() => {
         toggleBtn.style.transform = "rotate(0deg)";
