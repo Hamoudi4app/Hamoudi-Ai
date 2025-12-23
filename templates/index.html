@@ -20,18 +20,18 @@
     }
 
     #toggle-theme {
-      width: 70px;   /* أكبر */
-      height: 70px;
+      width: 80px;   /* أكبر */
+      height: 80px;
       border: none;
       border-radius: 50%;
       background: #007bff;
       color: #fff;
-      font-size: 28px; /* أيقونة أكبر */
+      font-size: 32px; /* أيقونة أكبر */
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       transition: transform 0.4s ease, background 0.4s ease, color 0.4s ease;
     }
 
@@ -60,26 +60,35 @@
       padding: 3vw;
       background: #fff;
       font-size: 4vw;
+      display: flex;
+      flex-direction: column;
     }
 
+    /* فقاعات الرسائل */
     .message {
-      margin: 2vh 0;
-      display: flex;
-      align-items: flex-start;
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 20px;
+      margin: 10px 0;
+      font-size: 16px;
+      line-height: 1.4;
+      word-wrap: break-word;
     }
 
     .message.ai {
-      color: #333;
+      background: #e5e5ea; /* رمادي فاتح */
+      color: #000;
+      align-self: flex-start;
     }
 
     .message.user {
-      color: #007bff;
-      justify-content: flex-end;
+      background: #007bff; /* أزرق */
+      color: #fff;
+      align-self: flex-end;
     }
 
     .avatar {
-      margin-right: 2vw;
-      font-size: 5vw;
+      display: none; /* نخفي الأيقونات لأن الفقاعات تكفي */
     }
 
     #input-area {
@@ -140,6 +149,16 @@
       background: #555;
       color: #eee;
     }
+
+    .dark-mode .message.ai {
+      background: #444; /* رمادي داكن */
+      color: #fff;
+    }
+
+    .dark-mode .message.user {
+      background: #0056b3; /* أزرق داكن */
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -177,16 +196,7 @@
     function addMessage(text, sender = "ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
-
-      const avatar = document.createElement("span");
-      avatar.className = "avatar";
-      avatar.textContent = sender === "user" ? "👤" : "🤖";
-
-      const content = document.createElement("span");
-      content.innerHTML = text;
-
-      div.appendChild(avatar);
-      div.appendChild(content);
+      div.textContent = text;
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
       saveChat();
