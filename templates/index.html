@@ -12,26 +12,27 @@
     }
 
     #sidebar-username {
-      padding: 10px;
+      padding: 15px;
       font-weight: bold;
       background: #007bff;
       color: #fff;
       text-align: center;
+      font-size: 18px;
     }
 
     #chat-box {
-      height: 70vh;
+      height: 65vh;
       overflow-y: auto;
       border: 1px solid #ccc;
-      padding: 10px;
+      padding: 15px;
       background: #fff;
+      font-size: 16px;
     }
 
     .message {
-      margin: 8px 0;
+      margin: 10px 0;
       display: flex;
       align-items: flex-start;
-      font-size: 16px;
     }
 
     .message.ai {
@@ -44,31 +45,31 @@
     }
 
     .avatar {
-      margin-right: 6px;
-      font-size: 18px;
+      margin-right: 8px;
+      font-size: 20px;
     }
 
     #input-area {
       display: flex;
-      padding: 10px;
+      padding: 12px;
       background: #fff;
       border-top: 1px solid #ccc;
     }
 
     #input {
       flex: 1;
-      padding: 10px;
-      font-size: 16px;
+      padding: 14px;
+      font-size: 18px;
       border: 1px solid #ccc;
-      border-radius: 20px;
+      border-radius: 25px;
       outline: none;
     }
 
     #send-btn {
-      margin-left: 10px;
-      width: 45px;
-      height: 45px;
-      font-size: 20px;
+      margin-left: 12px;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
       border: none;
       background: #007bff;
       color: #fff;
@@ -85,10 +86,11 @@
 
     #toggle-theme {
       width: 100%;
-      padding: 10px;
+      padding: 15px;
       border: none;
       background: #333;
       color: #fff;
+      font-size: 16px;
       cursor: pointer;
     }
 
@@ -117,18 +119,24 @@
     /* تحسين للهاتف */
     @media (max-width: 600px) {
       #chat-box {
-        height: 65vh;
-        font-size: 14px;
+        height: 60vh;
+        font-size: 18px;
       }
 
       #input {
-        font-size: 14px;
+        font-size: 18px;
+        padding: 16px;
       }
 
       #send-btn {
-        font-size: 18px;
-        width: 40px;
-        height: 40px;
+        width: 65px;
+        height: 65px;
+        font-size: 26px;
+      }
+
+      #sidebar-username {
+        font-size: 20px;
+        padding: 18px;
       }
     }
   </style>
@@ -145,7 +153,6 @@
   <script>
     const chatBox = document.getElementById("chat-box");
 
-    // تحميل المحادثة واسم المستخدم
     function loadChat() {
       const history = localStorage.getItem("chatHistory");
       if (history) {
