@@ -2,419 +2,45 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Hamoudi Ai</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <title>Chat App</title>
   <style>
-    body {
-      font-family: "Cairo", sans-serif;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: #f5f5f5;
-    }
-
-    /* الشريط الجانبي كـ Drawer */
-    #sidebar {
-      position: fixed;
-      top: 0;
-      left: -100%; /* مخفي افتراضياً بالكامل */
-      width: 280px;
-      max-width: 85vw;
-      height: 100%;
-      background: #2c2c54;
-      color: #fff;
-      padding: 20px;
-      box-sizing: border-box;
-      transition: left 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      z-index: 1001;
-    }
-    #sidebar.active { left: 0; }
-
-    #close-sidebar {
-      align-self: flex-end;
-      background: transparent;
-      border: none;
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    #sidebar h3 {
-      margin: 0 0 8px;
-      font-size: 18px;
-      text-align: center;
-    }
-    #sidebar p {
-      font-size: 14px;
-      text-align: center;
-      margin: 0 0 12px;
-      opacity: 0.9;
-    }
-    #logout-btn {
-      margin-top: auto;
-      width: 100%;
-      padding: 10px 16px;
-      background: red;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    #logout-btn:hover { background: darkred; }
-
-    /* Overlay للخلفية */
-    #overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: none;
-      z-index: 1000;
-    }
-    #overlay.active { display: block; }
-
-    /* الهيدر */
-    header {
-      background: #4facfe;
-      color: #fff;
-      padding: 15px;
-      font-size: 20px;
-      font-weight: bold;
-      display: flex;
-      justify-content: center; /* النص في المنتصف */
-      align-items: center;
-      position: relative;
-    }
-    #toggle-sidebar {
-      position: absolute;
-      left: 15px;
-      background: transparent;
-      border: none;
-      font-size: 22px;
-      color: #fff;
-      cursor: pointer;
-    }
-    #toggle-theme {
-      position: absolute;
-      right: 15px;
-      background: transparent;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      color: #fff;
-    }
-
-    /* منطقة الدردشة */
-    #chat {
-      flex: 1;
-      background: #fff;
-      padding: 15px;
-      overflow-y: auto;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    .message {
-      margin: 8px 0;
-      padding: 10px 14px;
-      border-radius: 20px;
-      max-width: 80%;
-      word-wrap: break-word;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-    }
-
-    .user {
-      background: #4facfe;
-      color: #fff;
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .ai {
-      background: #f5f5f5;
-      color: #333;
-      margin-right: auto;
-      text-align: left;
-    }
-
-    .avatar {
-      margin-right: 8px;
-      font-size: 18px;
-      flex: 0 0 auto;
-    }
-
-    .images {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-      width: 100%;
-    }
-    .images a {
-      display: block;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .images img {
-      width: 100%;
-      display: block;
-      border-radius: 10px;
-      transition: transform 0.2s;
-    }
-    .images img:hover { transform: scale(1.05); }
-
-    /* إدخال الرسائل */
-    #input-area {
-      display: flex;
-      padding: 10px;
-      background: #fff;
-      border-top: 1px solid #ddd;
-      gap: 10px;
-    }
-    #input {
-      flex: 1;
-      padding: 12px;
-      border-radius: 25px;
-      border: 1px solid #ccc;
-      outline: none;
-      font-size: 15px;
-    }
-    #send-btn {
-      padding: 0 18px;
-      border: none;
-      border-radius: 25px;
-      background: #4facfe;
-      color: #fff;
-      cursor: pointer;
-      font-size: 18px;
-    }
-    #send-btn:hover { background: #00c6ff; }
-
-    /* الوضع الداكن */
-    body.dark-mode { background: #121212; color: #eee; }
-    body.dark-mode #chat { background: #1e1e1e; color: #eee; }
-    body.dark-mode .user { background: #333; color: #fff; }
-    body.dark-mode .ai { background: #444; color: #eee; }
-
-    /* تجاوب الهاتف */
-    @media (max-width: 768px) {
-      #sidebar { width: 100%; max-width: 100%; }
-    }
+    body { font-family: Arial, sans-serif; }
+    #chat-box { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+    .message { margin: 5px 0; display: flex; align-items: center; }
+    .message.ai { color: #333; }
+    .message.user { color: #007bff; }
+    .avatar { margin-right: 8px; }
+    #input-area { display: flex; margin-top: 10px; }
+    #input { flex: 1; padding: 5px; }
+    #send-btn { padding: 5px 10px; font-size: 18px; }
+    .dark-mode { background: #222; color: #eee; }
   </style>
 </head>
 <body>
-  <!-- Overlay -->
-  <div id="overlay"></div>
-
-  <!-- الشريط الجانبي -->
-  <aside id="sidebar">
-    <button id="close-sidebar">✖</button>
-    <h3 id="sidebar-username">زائر</h3>
-    <p>مرحباً بك في Hamoudi Ai</p>
-    <button id="logout-btn">تسجيل الخروج</button>
-  </aside>
-
-  <!-- الهيدر -->
-  <header>
-    <button id="toggle-sidebar">☰</button>
-    Hamoudi Ai
-    <button id="toggle-theme">🌓</button>
-  </header>
-
-  <div id="chat"></div>
-
+  <div id="sidebar-username"></div>
+  <div id="chat-box"></div>
   <div id="input-area">
     <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
-    <button id="send-btn" onclick="sendMessage()">➤</button>
+    <button id="send-btn">🎤</button>
   </div>
+  <button id="toggle-theme">تبديل الثيم</button>
 
   <script>
-    const chatBox = document.getElementById("chat");
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-    const toggleSidebarBtn = document.getElementById("toggle-sidebar");
-    const closeSidebarBtn = document.getElementById("close-sidebar");
-    const logoutBtn = document.getElementById("logout-btn");
-
-    // فتح الشريط
-    toggleSidebarBtn.addEventListener("click", () => {
-      sidebar.classList.add("active");
-      overlay.classList.add("active");
-    });
-
-    // إغلاق الشريط
-    function closeDrawer() {
-      sidebar.classList.remove("active");
-      overlay.classList.remove("active");
-    }
-    closeSidebarBtn.addEventListener("click", closeDrawer);
-    overlay.addEventListener("click", closeDrawer);
-
-    // زر تسجيل الخروج → static/login.html
-logoutBtn.addEventListener("click", () => {
-  localStorage.clear();
-  window.location.href = "/logout"; // يخلي السيرفر يتولى التحويل إلى صفحة login.html
-});
-
-    // تحويل الروابط إلى قابلة للنقر
-    function linkify(text) {
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, url => '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>');
-    }
-
-// تحميل المحادثة واسم المستخدم
-function loadChat() {
-  const history = localStorage.getItem("chatHistory");
-  if (history) {
-    chatBox.innerHTML = history;
-  } else {
-    // أول مرة يدخل المستخدم → رسالة ترحيب
-    const name = localStorage.getItem("username") || "زائر";
-    addMessage(`مرحبا ${name}، كيف يمكنني مساعدتك؟`, "ai");
-  }
-
-  const name = localStorage.getItem("username") || "زائر";
-  document.getElementById("sidebar-username").textContent = name;
-}
-
-// حفظ المحادثة
-function saveChat() {
-  localStorage.setItem("chatHistory", chatBox.innerHTML);
-}
-
-// إضافة رسالة
-function addMessage(text, sender = "ai") {
-  const div = document.createElement("div");
-  div.className = "message " + sender;
-
-  const avatar = document.createElement("span");
-  avatar.className = "avatar";
-  avatar.textContent = sender === "user" ? "👤" : "🤖";
-
-  const content = document.createElement("span");
-  content.innerHTML = linkify(text);
-
-  div.appendChild(avatar);
-  div.appendChild(content);
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  saveChat();
-}
-
-// إضافة صور داخل الرسائل
-function addImages(images, titleText = "صور") {
-  const div = document.createElement("div");
-  div.className = "message ai";
-
-  const avatar = document.createElement("span");
-  avatar.className = "avatar";
-  avatar.textContent = "🤖";
-  div.appendChild(avatar);
-
-  const title = document.createElement("div");
-  title.textContent = titleText;
-  div.appendChild(title);
-
-  const imgContainer = document.createElement("div");
-  imgContainer.className = "images";
-
-  images.forEach(img => {
-    const link = document.createElement("a");
-    link.href = img.image;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-
-    const image = document.createElement("img");
-    image.src = img.image;
-    image.alt = img.title || "صورة";
-
-    link.appendChild(image);
-    imgContainer.appendChild(link);
-  });
-
-  div.appendChild(imgContainer);
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  saveChat();
-}
-
-// إرسال رسالة
-async function sendMessage() {
-  const input = document.getElementById("input");
-  const text = input.value.trim();
-  if (!text) return;
-
-  addMessage(text, "user");
-  input.value = "";
-
-  // تحديد طلب الصور
-  const isImageQuery =
-    text.startsWith("هات صور") ||
-    text.startsWith("صورة") ||
-    text.includes("صور عن") ||
-    text.includes("اعرض صور") ||
-    text.includes("صور لـ") ||
-    text.includes("صور ل ") ||
-    text.includes("المطور محمد فيصل");
-
-  if (isImageQuery) {
-    const q = text
-      .replace(/^هات صور\s*/, "")
-      .replace(/^صورة\s*/, "")
-      .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
-      .trim() || text;
-
-    try {
-      const resp = await fetch(`/api/images?q=${encodeURIComponent(q)}`);
-      const data = await resp.json();
-      if (data.images && data.images.length > 0) {
-        addImages(data.images, `صور عن ${q}`);
-      } else {
-        addMessage("لم أجد صور مناسبة.", "ai");
-      }
-    } catch (err) {
-      addMessage("حدث خطأ أثناء جلب الصور.", "ai");
-    }
-    return;
-  }
-
-  // الرد النصي من /api/chat
-  try {
-    const resp = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-    const data = await resp.json();
-    if (data.reply) {
-      addMessage(data.reply, "ai");
-    } else {
-      addMessage(data.error || "خطأ غير معروف", "ai");
-    }
-  } catch (err) {
-    addMessage("تعذر الاتصال بالخادم.", "ai");
-  }
-}
-
+    const chatBox = document.getElementById("chat-box");
 
     // تحميل المحادثة واسم المستخدم
-function loadChat() {
-  const history = localStorage.getItem("chatHistory");
-  if (history) {
-    chatBox.innerHTML = history;
-  } else {
-    // أول مرة يدخل المستخدم → رسالة ترحيب
-    const name = localStorage.getItem("username") || "زائر";
-    addMessage(مرحبا ${name}، كيف يمكنني مساعدتك؟, "ai");
-  }
+    function loadChat() {
+      const history = localStorage.getItem("chatHistory");
+      if (history) {
+        chatBox.innerHTML = history;
+      } else {
+        // أول مرة يدخل المستخدم → رسالة ترحيب
+        const name = localStorage.getItem("username") || "زائر";
+        addMessage(`مرحبا ${name}، كيف يمكنني مساعدتك؟`, "ai");
+      }
 
-  const name = localStorage.getItem("username") || "زائر";
-  document.getElementById("sidebar-username").textContent = name;
+      const name = localStorage.getItem("username") || "زائر";
+      document.getElementById("sidebar-username").textContent = name;
     }
 
     // حفظ المحادثة
@@ -432,7 +58,7 @@ function loadChat() {
       avatar.textContent = sender === "user" ? "👤" : "🤖";
 
       const content = document.createElement("span");
-      content.innerHTML = linkify(text);
+      content.innerHTML = text;
 
       div.appendChild(avatar);
       div.appendChild(content);
@@ -486,37 +112,7 @@ function loadChat() {
 
       addMessage(text, "user");
       input.value = "";
-
-      // تحديد طلب الصور
-      const isImageQuery =
-        text.startsWith("هات صور") ||
-        text.startsWith("صورة") ||
-        text.includes("صور عن") ||
-        text.includes("اعرض صور") ||
-        text.includes("صور لـ") ||
-        text.includes("صور ل ") ||
-        text.includes("المطور محمد فيصل");
-
-      if (isImageQuery) {
-        const q = text
-          .replace(/^هات صور\s*/, "")
-          .replace(/^صورة\s*/, "")
-          .replace(/(اعرض صور|صور عن|صور لـ|صور ل )/, "")
-          .trim() || text;
-
-        try {
-          const resp = await fetch(/api/images?q=${encodeURIComponent(q)});
-          const data = await resp.json();
-          if (data.images && data.images.length > 0) {
-            addImages(data.images, صور عن ${q});
-          } else {
-            addMessage("لم أجد صور مناسبة.", "ai");
-          }
-        } catch (err) {
-          addMessage("حدث خطأ أثناء جلب الصور.", "ai");
-        }
-        return;
-      }
+      actionBtn.textContent = "🎤"; // يرجع الزر لحالة التسجيل بعد الإرسال
 
       // الرد النصي من /api/chat
       try {
@@ -536,6 +132,51 @@ function loadChat() {
       }
     }
 
+    // زر واحد يتغير بين 🎤 و ➤
+    const inputField = document.getElementById("input");
+    const actionBtn = document.getElementById("send-btn");
+
+    inputField.addEventListener("input", () => {
+      if (inputField.value.trim().length > 0) {
+        actionBtn.textContent = "➤"; // زر إرسال
+      } else {
+        actionBtn.textContent = "🎤"; // زر تسجيل صوتي
+      }
+    });
+
+    actionBtn.addEventListener("click", () => {
+      if (inputField.value.trim().length > 0) {
+        sendMessage(); // إرسال النص
+      } else {
+        startVoiceRecognition(); // تشغيل التسجيل الصوتي
+      }
+    });
+
+    // دالة التسجيل الصوتي
+    function startVoiceRecognition() {
+      if ("webkitSpeechRecognition" in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = "ar-SA";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          inputField.value = transcript;
+          sendMessage(); // يرسل الرسالة مباشرة بعد التعرف
+        };
+
+        recognition.onerror = function() {
+          addMessage("تعذر التعرف على الصوت.", "ai");
+        };
+
+        recognition.start();
+        addMessage("🎤 جاري الاستماع...", "ai");
+      } else {
+        addMessage("المتصفح لا يدعم الإدخال الصوتي.", "ai");
+      }
+    }
+
     // تبديل الثيم
     document.getElementById("toggle-theme").addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
@@ -545,4 +186,4 @@ function loadChat() {
     window.onload = loadChat;
   </script>
 </body>
-  </html>
+</html>
