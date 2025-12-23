@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Hamoudi Ai</title>
+  <title>Chat App</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -10,6 +10,9 @@
       padding: 0;
       background: #f9f9f9;
       position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     /* زر تبديل الثيم */
@@ -20,13 +23,13 @@
     }
 
     #toggle-theme {
-      width: 80px;
-      height: 80px;
+      width: 85px;
+      height: 85px;
       border: none;
       border-radius: 50%;
       background: #007bff;
       color: #fff;
-      font-size: 32px;
+      font-size: 36px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -50,11 +53,11 @@
       background: #007bff;
       color: #fff;
       text-align: center;
-      font-size: 20px;
+      font-size: 22px;
     }
 
     #chat-box {
-      height: calc(100vh - 160px); /* يملأ الشاشة مع ترك مساحة للمدخل */
+      flex: 1;
       overflow-y: auto;
       border: 1px solid #ccc;
       padding: 15px;
@@ -65,12 +68,12 @@
 
     /* فقاعات الرسائل */
     .message {
-      max-width: 75%;
-      padding: 14px 18px;
+      max-width: 80%;
+      padding: 16px 20px;
       border-radius: 20px;
-      margin: 10px 0;
-      font-size: 18px;
-      line-height: 1.5;
+      margin: 12px 0;
+      font-size: 20px;
+      line-height: 1.6;
       word-wrap: break-word;
     }
 
@@ -97,15 +100,15 @@
       left: 0;
       width: 100%;
       display: flex;
-      padding: 12px;
+      padding: 14px;
       background: #fff;
       border-top: 1px solid #ccc;
     }
 
     #input {
       flex: 1;
-      padding: 16px;
-      font-size: 18px;
+      padding: 18px;
+      font-size: 20px;
       border: 1px solid #ccc;
       border-radius: 25px;
       outline: none;
@@ -113,9 +116,9 @@
 
     #send-btn {
       margin-left: 12px;
-      width: 65px;
-      height: 65px;
-      font-size: 28px;
+      width: 75px;
+      height: 75px;
+      font-size: 32px;
       border: none;
       background: #007bff;
       color: #fff;
@@ -167,16 +170,17 @@
     /* تحسين للهاتف */
     @media (max-width: 600px) {
       .message {
-        font-size: 20px;
-        padding: 16px 20px;
+        font-size: 22px;
+        padding: 18px 22px;
       }
       #input {
-        font-size: 20px;
+        font-size: 22px;
+        padding: 20px;
       }
       #send-btn {
-        width: 70px;
-        height: 70px;
-        font-size: 30px;
+        width: 80px;
+        height: 80px;
+        font-size: 34px;
       }
     }
   </style>
