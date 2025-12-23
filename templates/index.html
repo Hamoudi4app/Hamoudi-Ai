@@ -1,14 +1,53 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>Chat App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Hamoudi Ai</title>
   <style>
+    :root {
+      /* ألوان أساسية */
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --bg-light: #f9f9f9;
+      --bg-card: #ffffff;
+      --border: #cccccc;
+      --text: #000000;
+      --text-invert: #ffffff;
+
+      /* أحجام متجاوبة افتراضية */
+      --bubble-font: 2.2vw;
+      --input-font: 2vw;
+      --send-size: 8vw;
+      --send-font: 3vw;
+    }
+
+    /* ضبط للجوال واللابتوب */
+    @media (max-width: 600px) {
+      :root {
+        --bubble-font: 18px;
+        --input-font: 18px;
+        --send-size: 70px;
+        --send-font: 28px;
+      }
+    }
+    @media (min-width: 1024px) {
+      :root {
+        --bubble-font: 20px;
+        --input-font: 20px;
+        --send-size: 65px;
+        --send-font: 26px;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: #f9f9f9;
+      background: var(--bg-light);
+      color: var(--text);
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -16,18 +55,18 @@
 
     /* زر تبديل الثيم */
     #theme-toggle-container {
-      position: absolute;
-      top: 10px;
-      right: 10px;
+      position: fixed;
+      top: env(safe-area-inset-top, 10px);
+      right: env(safe-area-inset-right, 10px);
+      z-index: 10;
     }
-
     #toggle-theme {
       width: 85px;
       height: 85px;
       border: none;
       border-radius: 50%;
-      background: #007bff;
-      color: #fff;
+      background: var(--primary);
+      color: var(--text-invert);
       font-size: 36px;
       cursor: pointer;
       display: flex;
@@ -36,33 +75,31 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       transition: transform 0.4s ease, background 0.4s ease, color 0.4s ease;
     }
+    #toggle-theme:active { transform: scale(0.92) rotate(20deg); }
 
-    #toggle-theme:active {
-      transform: scale(0.9) rotate(20deg);
-    }
-
-    .dark-mode #toggle-theme {
-      background: #444;
-      color: #eee;
-    }
-
+    /* هيدر الاسم */
     #sidebar-username {
       padding: 15px;
       font-weight: bold;
-      background: #007bff;
-      color: #fff;
+      background: var(--primary);
+      color: var(--text-invert);
       text-align: center;
       font-size: 22px;
     }
 
+    /* صندوق الدردشة يملأ الشاشة ويترك مساحة للمدخل */
     #chat-box {
-      flex: 1; /* يملأ الشاشة */
+      flex: 1;
       overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 15px;
-      background: #fff;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 16px;
+      background: var(--bg-card);
       display: flex;
       flex-direction: column;
+      /* مسافة أسفل لمنع تغطية المدخل المثبت */
+      padding-bottom: calc(var(--send-size) + 28px);
+      scroll-behavior: smooth;
     }
 
     /* فقاعات الرسائل */
@@ -71,150 +108,109 @@
       padding: 16px 20px;
       border-radius: 20px;
       margin: 12px 0;
-      font-size: 18px;
+      font-size: var(--bubble-font);
       line-height: 1.6;
       word-wrap: break-word;
     }
-
     .message.ai {
       background: #e5e5ea;
       color: #000;
       align-self: flex-start;
     }
-
     .message.user {
-      background: #007bff;
-      color: #fff;
+      background: var(--primary);
+      color: var(--text-invert);
       align-self: flex-end;
     }
 
-    .avatar {
-      display: none;
-    }
+    .avatar { display: none; }
 
     /* خانة الإدخال مثبتة أسفل الشاشة */
     #input-area {
       position: fixed;
-      bottom: 0;
+      bottom: env(safe-area-inset-bottom, 0);
       left: 0;
+      right: 0;
       width: 100%;
       display: flex;
-      padding: 14px;
-      background: #fff;
-      border-top: 1px solid #ccc;
+      gap: 12px;
+      padding: 12px env(safe-area-inset-right, 12px) 12px env(safe-area-inset-left, 12px);
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      z-index: 5;
     }
 
     #input {
       flex: 1;
-      padding: 16px;
-      font-size: 18px;
-      border: 1px solid #ccc;
+      padding: 14px 16px;
+      font-size: var(--input-font);
+      border: 1px solid var(--border);
       border-radius: 25px;
       outline: none;
+      background: #fff;
+      color: var(--text);
     }
 
     #send-btn {
-      margin-left: 12px;
-      width: 65px;
-      height: 65px;
-      font-size: 28px;
+      width: var(--send-size);
+      height: var(--send-size);
+      font-size: var(--send-font);
       border: none;
-      background: #007bff;
-      color: #fff;
+      background: var(--primary);
+      color: var(--text-invert);
       border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease;
+      transition: transform 0.25s ease, background 0.25s ease;
     }
-
-    #send-btn:active {
-      background: #0056b3;
-      transform: scale(0.9);
-    }
+    #send-btn:active { background: var(--primary-dark); transform: scale(0.94); }
 
     /* الوضع الداكن */
     .dark-mode {
       background: #222;
       color: #eee;
     }
-
+    .dark-mode #toggle-theme { background: #444; color: #eee; }
     .dark-mode #chat-box {
       background: #333;
       border-color: #444;
     }
-
     .dark-mode #input {
       background: #444;
       color: #eee;
       border-color: #555;
     }
-
     .dark-mode #send-btn {
       background: #555;
       color: #eee;
     }
-
-    .dark-mode .message.ai {
-      background: #444;
-      color: #fff;
-    }
-
-    .dark-mode .message.user {
-      background: #0056b3;
-      color: #fff;
-    }
-
-    /* تحسين للهاتف */
-    @media (max-width: 600px) {
-      .message {
-        font-size: 20px;
-        padding: 18px 22px;
-      }
-      #input {
-        font-size: 20px;
-        padding: 18px;
-      }
-      #send-btn {
-        width: 75px;
-        height: 75px;
-        font-size: 30px;
-      }
-    }
+    .dark-mode .message.ai { background: #444; color: #fff; }
+    .dark-mode .message.user { background: #0056b3; color: #fff; }
   </style>
 </head>
 <body>
   <!-- زر تبديل الثيم -->
   <div id="theme-toggle-container">
-    <button id="toggle-theme">🌙</button>
+    <button id="toggle-theme" aria-label="Toggle theme">🌙</button>
   </div>
 
   <div id="sidebar-username"></div>
-  <div id="chat-box"></div>
+
+  <div id="chat-box" aria-live="polite" aria-atomic="false"></div>
+
   <div id="input-area">
-    <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
-    <button id="send-btn">🎤</button>
+    <input id="input" type="text" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
+    <button id="send-btn" aria-label="Send">🎤</button>
   </div>
 
   <script>
     const chatBox = document.getElementById("chat-box");
-
-    function loadChat() {
-      const history = localStorage.getItem("chatHistory");
-      if (history) {
-        chatBox.innerHTML = history;
-      } else {
-        const name = localStorage.getItem("username") || "زائر";
-        addMessage(`مرحبا ${name}، كيف يمكنني مساعدتك؟`, "ai");
-      }
-      const name = localStorage.getItem("username") || "زائر";
-      document.getElementById("sidebar-username").textContent = name;
-    }
-
-    function saveChat() {
-      localStorage.setItem("chatHistory", chatBox.innerHTML);
-    }
+    const inputField = document.getElementById("input");
+    const actionBtn = document.getElementById("send-btn");
+    const toggleBtn = document.getElementById("toggle-theme");
+    const usernameEl = document.getElementById("sidebar-username");
 
     function addMessage(text, sender = "ai") {
       const div = document.createElement("div");
@@ -223,6 +219,22 @@
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
       saveChat();
+    }
+
+    function saveChat() {
+      localStorage.setItem("chatHistory", chatBox.innerHTML);
+    }
+
+    function loadChat() {
+      const history = localStorage.getItem("chatHistory");
+      const name = localStorage.getItem("username") || "زائر";
+      usernameEl.textContent = name;
+
+      if (history) {
+        chatBox.innerHTML = history;
+      } else {
+        addMessage(`مرحبًا ${name}، كيف يمكنني مساعدتك؟`, "ai");
+      }
     }
 
     async function sendMessage() {
@@ -243,31 +255,12 @@
         if (data.reply) {
           addMessage(data.reply, "ai");
         } else {
-          addMessage(data.error || "خطأ غير معروف", "ai");
+          addMessage(data.error || "حدث خطأ غير معروف.", "ai");
         }
       } catch (err) {
         addMessage("تعذر الاتصال بالخادم.", "ai");
       }
     }
-
-    const inputField = document.getElementById("input");
-    const actionBtn = document.getElementById("send-btn");
-
-    inputField.addEventListener("input", () => {
-      if (inputField.value.trim().length > 0) {
-        actionBtn.textContent = "➤";
-      } else {
-        actionBtn.textContent = "🎤";
-      }
-    });
-
-    actionBtn.addEventListener("click", () => {
-      if (inputField.value.trim().length > 0) {
-        sendMessage();
-      } else {
-        startVoiceRecognition();
-      }
-    });
 
     function startVoiceRecognition() {
       if ("webkitSpeechRecognition" in window) {
@@ -293,23 +286,59 @@
       }
     }
 
-    const toggleBtn = document.getElementById("toggle-theme");
+    // تبديل محتوى زر الإرسال بين مايك وسهم
+    inputField.addEventListener("input", () => {
+      actionBtn.textContent = inputField.value.trim().length > 0 ? "➤" : "🎤";
+    });
+
+    // إرسال أو بدء الصوت
+    actionBtn.addEventListener("click", () => {
+      if (inputField.value.trim().length > 0) {
+        sendMessage();
+      } else {
+        startVoiceRecognition();
+      }
+    });
+
+    // تبديل الثيم مع أنيميشن ودعم الاستمرارية
     toggleBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+      toggleBtn.textContent = isDark ? "☀️" : "🌙";
 
       toggleBtn.style.transform = "rotate(360deg)";
-      setTimeout(() => {
-        toggleBtn.style.transform = "rotate(0deg)";
-      }, 400);
+      setTimeout(() => { toggleBtn.style.transform = "rotate(0deg)"; }, 400);
 
-      if (document.body.classList.contains("dark-mode")) {
+      // حفظ تفضيل الثيم
+      localStorage.setItem("prefersDark", isDark ? "1" : "0");
+    });
+
+    // تطبيق تفضيل الثيم المخزن
+    (function applySavedTheme() {
+      const prefersDark = localStorage.getItem("prefersDark") === "1";
+      if (prefersDark) {
+        document.body.classList.add("dark-mode");
         toggleBtn.textContent = "☀️";
       } else {
         toggleBtn.textContent = "🌙";
       }
+    })();
+
+    // تحميل المحادثة
+    window.addEventListener("load", loadChat);
+
+    // معالجة ظهور لوحة المفاتيح على الهواتف لتجنب تغطية المحتوى
+    window.addEventListener("resize", () => {
+      chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    window.onload = loadChat;
+    // إرسال بالإنتر
+    inputField.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
   </script>
 </body>
-  </html>
+</html>
