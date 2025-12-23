@@ -4,16 +4,133 @@
   <meta charset="UTF-8">
   <title>Chat App</title>
   <style>
-    body { font-family: Arial, sans-serif; }
-    #chat-box { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
-    .message { margin: 5px 0; display: flex; align-items: center; }
-    .message.ai { color: #333; }
-    .message.user { color: #007bff; }
-    .avatar { margin-right: 8px; }
-    #input-area { display: flex; margin-top: 10px; }
-    #input { flex: 1; padding: 5px; }
-    #send-btn { padding: 5px 10px; font-size: 18px; }
-    .dark-mode { background: #222; color: #eee; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+    }
+
+    #sidebar-username {
+      padding: 10px;
+      font-weight: bold;
+      background: #007bff;
+      color: #fff;
+      text-align: center;
+    }
+
+    #chat-box {
+      height: 70vh;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .message {
+      margin: 8px 0;
+      display: flex;
+      align-items: flex-start;
+      font-size: 16px;
+    }
+
+    .message.ai {
+      color: #333;
+    }
+
+    .message.user {
+      color: #007bff;
+      justify-content: flex-end;
+    }
+
+    .avatar {
+      margin-right: 6px;
+      font-size: 18px;
+    }
+
+    #input-area {
+      display: flex;
+      padding: 10px;
+      background: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    #input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    #send-btn {
+      margin-left: 10px;
+      width: 45px;
+      height: 45px;
+      font-size: 20px;
+      border: none;
+      background: #007bff;
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #send-btn:active {
+      background: #0056b3;
+    }
+
+    #toggle-theme {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* الوضع الداكن */
+    .dark-mode {
+      background: #222;
+      color: #eee;
+    }
+
+    .dark-mode #chat-box {
+      background: #333;
+      border-color: #444;
+    }
+
+    .dark-mode #input {
+      background: #444;
+      color: #eee;
+      border-color: #555;
+    }
+
+    .dark-mode #send-btn {
+      background: #555;
+      color: #eee;
+    }
+
+    /* تحسين للهاتف */
+    @media (max-width: 600px) {
+      #chat-box {
+        height: 65vh;
+        font-size: 14px;
+      }
+
+      #input {
+        font-size: 14px;
+      }
+
+      #send-btn {
+        font-size: 18px;
+        width: 40px;
+        height: 40px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -34,21 +151,17 @@
       if (history) {
         chatBox.innerHTML = history;
       } else {
-        // أول مرة يدخل المستخدم → رسالة ترحيب
         const name = localStorage.getItem("username") || "زائر";
         addMessage(`مرحبا ${name}، كيف يمكنني مساعدتك؟`, "ai");
       }
-
       const name = localStorage.getItem("username") || "زائر";
       document.getElementById("sidebar-username").textContent = name;
     }
 
-    // حفظ المحادثة
     function saveChat() {
       localStorage.setItem("chatHistory", chatBox.innerHTML);
     }
 
-    // إضافة رسالة
     function addMessage(text, sender = "ai") {
       const div = document.createElement("div");
       div.className = "message " + sender;
@@ -67,54 +180,14 @@
       saveChat();
     }
 
-    // إضافة صور داخل الرسائل
-    function addImages(images, titleText = "صور") {
-      const div = document.createElement("div");
-      div.className = "message ai";
-
-      const avatar = document.createElement("span");
-      avatar.className = "avatar";
-      avatar.textContent = "🤖";
-      div.appendChild(avatar);
-
-      const title = document.createElement("div");
-      title.textContent = titleText;
-      div.appendChild(title);
-
-      const imgContainer = document.createElement("div");
-      imgContainer.className = "images";
-
-      images.forEach(img => {
-        const link = document.createElement("a");
-        link.href = img.image;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-
-        const image = document.createElement("img");
-        image.src = img.image;
-        image.alt = img.title || "صورة";
-
-        link.appendChild(image);
-        imgContainer.appendChild(link);
-      });
-
-      div.appendChild(imgContainer);
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      saveChat();
-    }
-
-    // إرسال رسالة
     async function sendMessage() {
-      const input = document.getElementById("input");
-      const text = input.value.trim();
+      const text = inputField.value.trim();
       if (!text) return;
 
       addMessage(text, "user");
-      input.value = "";
-      actionBtn.textContent = "🎤"; // يرجع الزر لحالة التسجيل بعد الإرسال
+      inputField.value = "";
+      actionBtn.textContent = "🎤";
 
-      // الرد النصي من /api/chat
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
@@ -132,27 +205,25 @@
       }
     }
 
-    // زر واحد يتغير بين 🎤 و ➤
     const inputField = document.getElementById("input");
     const actionBtn = document.getElementById("send-btn");
 
     inputField.addEventListener("input", () => {
       if (inputField.value.trim().length > 0) {
-        actionBtn.textContent = "➤"; // زر إرسال
+        actionBtn.textContent = "➤";
       } else {
-        actionBtn.textContent = "🎤"; // زر تسجيل صوتي
+        actionBtn.textContent = "🎤";
       }
     });
 
     actionBtn.addEventListener("click", () => {
       if (inputField.value.trim().length > 0) {
-        sendMessage(); // إرسال النص
+        sendMessage();
       } else {
-        startVoiceRecognition(); // تشغيل التسجيل الصوتي
+        startVoiceRecognition();
       }
     });
 
-    // دالة التسجيل الصوتي
     function startVoiceRecognition() {
       if ("webkitSpeechRecognition" in window) {
         const recognition = new webkitSpeechRecognition();
@@ -163,7 +234,7 @@
         recognition.onresult = function(event) {
           const transcript = event.results[0][0].transcript;
           inputField.value = transcript;
-          sendMessage(); // يرسل الرسالة مباشرة بعد التعرف
+          sendMessage();
         };
 
         recognition.onerror = function() {
@@ -177,12 +248,10 @@
       }
     }
 
-    // تبديل الثيم
     document.getElementById("toggle-theme").addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
     });
 
-    // تحميل عند فتح الصفحة
     window.onload = loadChat;
   </script>
 </body>
