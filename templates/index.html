@@ -12,25 +12,25 @@
     }
 
     #sidebar-username {
-      padding: 15px;
+      padding: 4vh;
       font-weight: bold;
       background: #007bff;
       color: #fff;
       text-align: center;
-      font-size: 18px;
+      font-size: 5vw; /* متجاوب مع عرض الشاشة */
     }
 
     #chat-box {
       height: 65vh;
       overflow-y: auto;
       border: 1px solid #ccc;
-      padding: 15px;
+      padding: 3vw;
       background: #fff;
-      font-size: 16px;
+      font-size: 4vw; /* النص متجاوب */
     }
 
     .message {
-      margin: 10px 0;
+      margin: 2vh 0;
       display: flex;
       align-items: flex-start;
     }
@@ -45,31 +45,31 @@
     }
 
     .avatar {
-      margin-right: 8px;
-      font-size: 20px;
+      margin-right: 2vw;
+      font-size: 5vw;
     }
 
     #input-area {
       display: flex;
-      padding: 12px;
+      padding: 2vh;
       background: #fff;
       border-top: 1px solid #ccc;
     }
 
     #input {
       flex: 1;
-      padding: 14px;
-      font-size: 18px;
+      padding: 2vh;
+      font-size: 4vw;
       border: 1px solid #ccc;
       border-radius: 25px;
       outline: none;
     }
 
     #send-btn {
-      margin-left: 12px;
-      width: 60px;
-      height: 60px;
-      font-size: 24px;
+      margin-left: 2vw;
+      width: 12vw;   /* الزر يكبر/يصغر حسب الشاشة */
+      height: 12vw;
+      font-size: 6vw;
       border: none;
       background: #007bff;
       color: #fff;
@@ -86,11 +86,11 @@
 
     #toggle-theme {
       width: 100%;
-      padding: 15px;
+      padding: 3vh;
       border: none;
       background: #333;
       color: #fff;
-      font-size: 16px;
+      font-size: 4vw;
       cursor: pointer;
     }
 
@@ -114,30 +114,6 @@
     .dark-mode #send-btn {
       background: #555;
       color: #eee;
-    }
-
-    /* تحسين للهاتف */
-    @media (max-width: 600px) {
-      #chat-box {
-        height: 60vh;
-        font-size: 18px;
-      }
-
-      #input {
-        font-size: 18px;
-        padding: 16px;
-      }
-
-      #send-btn {
-        width: 65px;
-        height: 65px;
-        font-size: 26px;
-      }
-
-      #sidebar-username {
-        font-size: 20px;
-        padding: 18px;
-      }
     }
   </style>
 </head>
