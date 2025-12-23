@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Chat App</title>
+  <title>Hamoudi Ai</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,6 +13,8 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
 
     /* زر تبديل الثيم */
@@ -23,13 +25,13 @@
     }
 
     #toggle-theme {
-      width: 85px;
-      height: 85px;
+      width: 70px;
+      height: 70px;
       border: none;
       border-radius: 50%;
       background: #007bff;
       color: #fff;
-      font-size: 36px;
+      font-size: 28px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -48,32 +50,35 @@
     }
 
     #sidebar-username {
-      padding: 15px;
+      padding: 10px;
       font-weight: bold;
       background: #007bff;
       color: #fff;
       text-align: center;
-      font-size: 22px;
+      font-size: 16px;
+      width: 100%;
     }
 
     #chat-box {
-      flex: 1;
+      height: 50vh; /* أصغر */
+      width: 90%;
       overflow-y: auto;
       border: 1px solid #ccc;
-      padding: 15px;
+      padding: 10px;
       background: #fff;
       display: flex;
       flex-direction: column;
+      margin-top: 10px;
     }
 
     /* فقاعات الرسائل */
     .message {
-      max-width: 80%;
-      padding: 16px 20px;
+      max-width: 75%;
+      padding: 10px 14px;
       border-radius: 20px;
-      margin: 12px 0;
-      font-size: 20px;
-      line-height: 1.6;
+      margin: 8px 0;
+      font-size: 14px; /* أصغر */
+      line-height: 1.4;
       word-wrap: break-word;
     }
 
@@ -93,32 +98,30 @@
       display: none;
     }
 
-    /* خانة الإدخال مثبتة أسفل الشاشة */
+    /* خانة الإدخال */
     #input-area {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
+      width: 90%;
       display: flex;
-      padding: 14px;
+      padding: 10px;
       background: #fff;
       border-top: 1px solid #ccc;
+      margin-top: auto;
     }
 
     #input {
       flex: 1;
-      padding: 18px;
-      font-size: 20px;
+      padding: 10px;
+      font-size: 14px;
       border: 1px solid #ccc;
-      border-radius: 25px;
+      border-radius: 20px;
       outline: none;
     }
 
     #send-btn {
-      margin-left: 12px;
-      width: 75px;
-      height: 75px;
-      font-size: 32px;
+      margin-left: 10px;
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
       border: none;
       background: #007bff;
       color: #fff;
@@ -165,23 +168,6 @@
     .dark-mode .message.user {
       background: #0056b3;
       color: #fff;
-    }
-
-    /* تحسين للهاتف */
-    @media (max-width: 600px) {
-      .message {
-        font-size: 22px;
-        padding: 18px 22px;
-      }
-      #input {
-        font-size: 22px;
-        padding: 20px;
-      }
-      #send-btn {
-        width: 80px;
-        height: 80px;
-        font-size: 34px;
-      }
     }
   </style>
 </head>
