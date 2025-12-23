@@ -9,6 +9,38 @@
       margin: 0;
       padding: 0;
       background: #f9f9f9;
+      position: relative;
+    }
+
+    /* زر تبديل الثيم */
+    #theme-toggle-container {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+
+    #toggle-theme {
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 50%;
+      background: #007bff;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    #toggle-theme:active {
+      background: #0056b3;
+    }
+
+    .dark-mode #toggle-theme {
+      background: #444;
+      color: #eee;
     }
 
     #sidebar-username {
@@ -17,7 +49,7 @@
       background: #007bff;
       color: #fff;
       text-align: center;
-      font-size: 5vw; /* متجاوب مع عرض الشاشة */
+      font-size: 5vw;
     }
 
     #chat-box {
@@ -26,7 +58,7 @@
       border: 1px solid #ccc;
       padding: 3vw;
       background: #fff;
-      font-size: 4vw; /* النص متجاوب */
+      font-size: 4vw;
     }
 
     .message {
@@ -67,7 +99,7 @@
 
     #send-btn {
       margin-left: 2vw;
-      width: 12vw;   /* الزر يكبر/يصغر حسب الشاشة */
+      width: 12vw;
       height: 12vw;
       font-size: 6vw;
       border: none;
@@ -82,16 +114,6 @@
 
     #send-btn:active {
       background: #0056b3;
-    }
-
-    #toggle-theme {
-      width: 100%;
-      padding: 3vh;
-      border: none;
-      background: #333;
-      color: #fff;
-      font-size: 4vw;
-      cursor: pointer;
     }
 
     /* الوضع الداكن */
@@ -118,13 +140,17 @@
   </style>
 </head>
 <body>
+  <!-- زر تبديل الثيم -->
+  <div id="theme-toggle-container">
+    <button id="toggle-theme">🌙</button>
+  </div>
+
   <div id="sidebar-username"></div>
   <div id="chat-box"></div>
   <div id="input-area">
     <input id="input" type="text" placeholder="اكتب رسالتك هنا...">
     <button id="send-btn">🎤</button>
   </div>
-  <button id="toggle-theme">تبديل الثيم</button>
 
   <script>
     const chatBox = document.getElementById("chat-box");
@@ -231,8 +257,14 @@
       }
     }
 
-    document.getElementById("toggle-theme").addEventListener("click", () => {
+    const toggleBtn = document.getElementById("toggle-theme");
+    toggleBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
+      if (document.body.classList.contains("dark-mode")) {
+        toggleBtn.textContent = "☀️"; // أيقونة الشمس للوضع الداكن
+      } else {
+        toggleBtn.textContent = "🌙"; // أيقونة القمر للوضع الفاتح
+      }
     });
 
     window.onload = loadChat;
