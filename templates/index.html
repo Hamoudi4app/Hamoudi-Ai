@@ -213,9 +213,278 @@
       margin: 8px 0 12px;
       font-size: 18px;
     }
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Hamoudi Ai</title>
+
+  <!-- أيقونة التبويب (favicon) من مجلد static -->
+  <link rel="icon" type="image/png" href="static/favicon.png" />
+  <!-- ملف manifest لتفعيل التثبيت (PWA) -->
+  <link rel="manifest" href="manifest.json" />
+
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --bg-light: #f9f9f9;
+      --bg-card: #ffffff;
+      --border: #cccccc;
+      --text: #000000;
+      --text-invert: #ffffff;
+
+      --bubble-font: 2.2vw;
+      --input-font: 2vw;
+      --send-size: 8vw;
+      --send-font: 3vw;
+    }
+
+    @media (max-width: 600px) {
+      :root {
+        --bubble-font: 18px;
+        --input-font: 18px;
+        --send-size: 70px;
+        --send-font: 28px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      :root {
+        --bubble-font: 20px;
+        --input-font: 20px;
+        --send-size: 65px;
+        --send-font: 26px;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-light);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* زر تبديل الثيم */
+    #theme-toggle-container {
+      position: fixed;
+      top: env(safe-area-inset-top, 10px);
+      right: env(safe-area-inset-right, 10px);
+      z-index: 10;
+    }
+
+    #toggle-theme {
+      width: 45px;
+      height: 45px;
+      border: none;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--text-invert);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.4s ease, background 0.4s ease, color 0.4s ease;
+    }
+    #toggle-theme:active { transform: scale(0.92) rotate(20deg); }
+
+    /* هيدر الاسم */
+    #sidebar-username {
+      padding: 15px;
+      font-weight: bold;
+      background: var(--primary);
+      color: var(--text-invert);
+      text-align: center;
+      font-size: 22px;
+    }
+
+    /* صندوق الدردشة */
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 16px;
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(var(--send-size) + 32px); /* مساحة لأسفل لمنع التغطية */
+      scroll-behavior: smooth;
+    }
+
+    /* فقاعات الرسائل */
+    .message {
+      max-width: 80%;
+      padding: 16px 20px;
+      border-radius: 20px;
+      margin: 12px 0;
+      font-size: var(--bubble-font);
+      line-height: 1.6;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+    .message.ai {
+      background: #e5e5ea;
+      color: #000;
+      align-self: flex-start;
+    }
+    .message.user {
+      background: var(--primary);
+      color: var(--text-invert);
+      align-self: flex-end;
+    }
+
+    /* روابط داخل الرسائل */
+    .message a {
+      color: #0645ad;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+    .dark-mode .message a {
+      color: #4da3ff;
+    }
+
+    /* خانة الإدخال مثبتة أسفل الشاشة */
+    #input-area {
+      position: fixed;
+      bottom: env(safe-area-inset-bottom, 0);
+      left: 0;
+      right: 0;
+      width: 100%;
+      display: flex;
+      gap: 12px;
+      padding: 12px env(safe-area-inset-right, 12px) 12px env(safe-area-inset-left, 12px);
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      z-index: 5;
+    }
+
+    #input {
+      flex: 1;
+      padding: 14px 16px;
+      font-size: var(--input-font);
+      border: 1px solid var(--border);
+      border-radius: 25px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+
+    #send-btn {
+      width: var(--send-size);
+      height: var(--send-size);
+      font-size: var(--send-font);
+      border: none;
+      background: var(--primary);
+      color: var(--text-invert);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease, background 0.25s ease;
+    }
+    #send-btn:active { background: var(--primary-dark); transform: scale(0.94); }
+
+    /* الوضع الداكن */
+    .dark-mode {
+      background: #222;
+      color: #eee;
+    }
+    .dark-mode #toggle-theme { background: #444; color: #eee; }
+    .dark-mode #chat-box {
+      background: #333;
+      border-color: #444;
+    }
+    .dark-mode #input {
+      background: #444;
+      color: #eee;
+      border-color: #555;
+    }
+    .dark-mode #send-btn {
+      background: #555;
+      color: #eee;
+    }
+    .dark-mode .message.ai { background: #444; color: #fff; }
+    .dark-mode .message.user { background: #0056b3; color: #fff; }
+
+    /* QR Popup */
+    #qr-popup {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 999;
+      opacity: 0;
+      transition: all 0.6s ease;
+    }
+    #qr-popup.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #qr-popup h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <div id="theme-toggle-container">
+    <button id="toggle-theme">🌙</button>
+  </div>
+
+  <div id="sidebar-username"></div>
+  <div id="chat-box"></div>
+  <div id="input-area">
+    <input id="input" type="text" placeholder="اكتب رسالتك هنا..." />
+    <button id="send-btn">🎤</button>
+  </div>
+
+  <!-- QR Popup -->
+  <div id="qr-popup">
+    <h3>ثبّت التطبيق على شاشتك الرئيسية</h3>
+    <div id="qrcode"></div>
+  </div>
+
+  <!-- مكتبة QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    // توليد رمز QR صغير
+    new QRCode(document.getElementById("qrcode"), {
+      text: window.location.href,
+      width: 100,
+      height: 100,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // إظهار مع أنيميشن
+    const qrPopup = document.getElementById("qr-popup");
+    setTimeout(() => {
+      qrPopup.classList.add("show");
+    }, 500);
+
+    // إخفاء بعد 7 ثواني
+    setTimeout(() => {
+      qrPopup.classList.remove("show");
+    }, 7500);
+  </script>
+</body>
+  
   <!-- زر تبديل الثيم -->
   <div id="theme-toggle-container">
     <button id="toggle-theme" aria-label="Toggle theme">🌙</button>
