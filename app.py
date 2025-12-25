@@ -16,7 +16,7 @@ app.permanent_session_lifetime = timedelta(days=7)
 # ---------------------------------------------------
 # مفاتيح — املأها بنفسك
 # ---------------------------------------------------
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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"
 SMTP_EMAIL = "hamoudi4app@gmail.com"
 SMTP_PASSWORD = "plai shuq mokq ijdl"
 
